@@ -1,5 +1,20 @@
 export const SYNKI_TEMPLATE_NAME = 'Cloze'
 
+const CORE_TEMPLATE_FIELDS = new Set(['Text', 'Back Extra', 'One by one', 'Tags'])
+
+const DEFAULT_SYNKI_TEMPLATE_FIELDS = [
+	'Text',
+	'Back Extra',
+	'Definitionen',
+	'Kontext',
+	'Akteure',
+	'Theorien',
+	'Fallbeispiele',
+	'Kritik',
+	'Prüfungsfragen',
+	'One by one',
+]
+
 export const SYNKI_FRONT_TEMPLATE = String.raw`<div id="obsidian-card" class="card-shell">
     <div id="text" class="main-text">
         {{cloze:Text}}
@@ -81,7 +96,12 @@ export const SYNKI_FRONT_TEMPLATE = String.raw`<div id="obsidian-card" class="ca
 })();
 </script>`
 
-export const SYNKI_BACK_TEMPLATE = String.raw`<div id="obsidian-card" class="card-shell" style="visibility:hidden;">
+export const SYNKI_BACK_TEMPLATE = buildSynkiBackTemplate()
+
+export function buildSynkiBackTemplate(fields: string[] = DEFAULT_SYNKI_TEMPLATE_FIELDS): string {
+	const extraFields = getExtraTemplateFields(fields)
+
+	return String.raw`<div id="obsidian-card" class="card-shell" style="visibility:hidden;">
     <div id="text" class="main-text">
         {{cloze:Text}}
     </div>
@@ -103,84 +123,11 @@ export const SYNKI_BACK_TEMPLATE = String.raw`<div id="obsidian-card" class="car
         {{/Back Extra}}
 
         <div class="extra-panels">
-            {{#Eigene Prüfungsfragen}}
-            <div id="field-questions" class="extra-field question-field">
-                <div class="field-title">Prüfungsfragen</div>
-                <div class="field-content">{{Eigene Prüfungsfragen}}</div>
-            </div>
-            {{/Eigene Prüfungsfragen}}
-
-            {{#Definitionen}}
-            <div id="field-definitions" class="extra-field definition-field">
-                <div class="field-title">Definition</div>
-                <div class="field-content">{{Definitionen}}</div>
-            </div>
-            {{/Definitionen}}
-
-            {{#Mechanismus}}
-            <div id="field-mechanism" class="extra-field mechanism-field">
-                <div class="field-title">Mechanismus</div>
-                <div class="field-content">{{Mechanismus}}</div>
-            </div>
-            {{/Mechanismus}}
-
-            {{#Klinik}}
-            <div id="field-clinic" class="extra-field clinic-field">
-                <div class="field-title">Klinik</div>
-                <div class="field-content">{{Klinik}}</div>
-            </div>
-            {{/Klinik}}
-
-            {{#Dosis}}
-            <div id="field-dose" class="extra-field dose-field">
-                <div class="field-title">Dosis</div>
-                <div class="field-content">{{Dosis}}</div>
-            </div>
-            {{/Dosis}}
-
-            {{#Cave}}
-            <div id="field-cave" class="extra-field cave-field">
-                <div class="field-title">Cave / Prüfungsfalle</div>
-                <div class="field-content">{{Cave}}</div>
-            </div>
-            {{/Cave}}
-
-            {{#Merksprüche}}
-            <div id="field-mnemonics" class="extra-field mnemonic-field">
-                <div class="field-title">Merkspruch</div>
-                <div class="field-content">{{Merksprüche}}</div>
-            </div>
-            {{/Merksprüche}}
+${renderExtraPanels(extraFields)}
         </div>
 
         <div class="field-buttons">
-            {{#Eigene Prüfungsfragen}}
-            <button class="field-button question-button" data-panel="field-questions" onclick="toggleField('field-questions'); event.stopPropagation();">Prüfungsfragen</button>
-            {{/Eigene Prüfungsfragen}}
-
-            {{#Definitionen}}
-            <button class="field-button definition-button" data-panel="field-definitions" onclick="toggleField('field-definitions'); event.stopPropagation();">Definition</button>
-            {{/Definitionen}}
-
-            {{#Mechanismus}}
-            <button class="field-button mechanism-button" data-panel="field-mechanism" onclick="toggleField('field-mechanism'); event.stopPropagation();">Mechanismus</button>
-            {{/Mechanismus}}
-
-            {{#Klinik}}
-            <button class="field-button clinic-button" data-panel="field-clinic" onclick="toggleField('field-clinic'); event.stopPropagation();">Klinik</button>
-            {{/Klinik}}
-
-            {{#Dosis}}
-            <button class="field-button dose-button" data-panel="field-dose" onclick="toggleField('field-dose'); event.stopPropagation();">Dosis</button>
-            {{/Dosis}}
-
-            {{#Cave}}
-            <button class="field-button cave-button" data-panel="field-cave" onclick="toggleField('field-cave'); event.stopPropagation();">Cave</button>
-            {{/Cave}}
-
-            {{#Merksprüche}}
-            <button class="field-button mnemonic-button" data-panel="field-mnemonics" onclick="toggleField('field-mnemonics'); event.stopPropagation();">Merkspruch</button>
-            {{/Merksprüche}}
+${renderExtraButtons(extraFields)}
         </div>
 
         {{#Tags}}
@@ -417,6 +364,59 @@ export const SYNKI_BACK_TEMPLATE = String.raw`<div id="obsidian-card" class="car
     document.addEventListener("keyup", handleReviewShortcut, true);
 })();
 </script>`
+}
+
+function getExtraTemplateFields(fields: string[]): string[] {
+	const seen = new Set<string>()
+	const extraFields: string[] = []
+
+	for (const field of fields.map((value) => value.trim()).filter(Boolean)) {
+		if (CORE_TEMPLATE_FIELDS.has(field) || seen.has(field) || field.includes('{') || field.includes('}')) {
+			continue
+		}
+
+		seen.add(field)
+		extraFields.push(field)
+	}
+
+	return extraFields
+}
+
+function renderExtraPanels(fields: string[]): string {
+	return fields
+		.map((field, index) => {
+			const panelId = `field-extra-${String(index + 1)}`
+			const escapedField = escapeHTML(field)
+			return String.raw`            {{#${field}}}
+            <div id="${panelId}" class="extra-field">
+                <div class="field-title">${escapedField}</div>
+                <div class="field-content">{{${field}}}</div>
+            </div>
+            {{/${field}}}`
+		})
+		.join('\n\n')
+}
+
+function renderExtraButtons(fields: string[]): string {
+	return fields
+		.map((field, index) => {
+			const panelId = `field-extra-${String(index + 1)}`
+			const escapedField = escapeHTML(field)
+			return String.raw`            {{#${field}}}
+            <button class="field-button" data-panel="${panelId}" onclick="toggleField('${panelId}'); event.stopPropagation();">${escapedField}</button>
+            {{/${field}}}`
+		})
+		.join('\n\n')
+}
+
+function escapeHTML(value: string): string {
+	return value
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;')
+		.replaceAll("'", '&#39;')
+}
 
 export const SYNKI_STYLING = String.raw`:root {
     --bg: #f7f7f7;

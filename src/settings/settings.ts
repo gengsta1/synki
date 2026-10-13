@@ -14,7 +14,7 @@ import type SynkiPlugin from '../main'
 import { FolderSuggest } from '../extensions/folder-suggest'
 import { SynkiConnectClient } from '../synki-anki-connect'
 import {
-	SYNKI_BACK_TEMPLATE,
+	buildSynkiBackTemplate,
 	SYNKI_FRONT_TEMPLATE,
 	SYNKI_STYLING,
 	SYNKI_TEMPLATE_NAME,
@@ -161,25 +161,31 @@ export function getSynkiPluginDefaultSettings(app: App): SynkiPluginSettings {
 				'Back Extra=Back Extra',
 				'Definitions=Definitionen',
 				'Definition=Definitionen',
+				'Context=Kontext',
+				'Actors=Akteure',
+				'Theories=Theorien',
+				'Case Studies=Fallbeispiele',
+				'Critique=Kritik',
+				'Questions=Prüfungsfragen',
 				'Mechanism=Mechanismus',
 				'Clinic=Klinik',
 				'Dose=Dosis',
 				'Dosage=Dosis',
 				'Cave=Cave',
 				'Mnemonics=Merksprüche',
-				'Questions=Eigene Prüfungsfragen',
+				'Medical Questions=Eigene Prüfungsfragen',
 				'One by one=One by one',
 			].join('\n'),
 			fields: [
 				'Text',
 				'Back Extra',
 				'Definitionen',
-				'Mechanismus',
-				'Klinik',
-				'Dosis',
-				'Cave',
-				'Merksprüche',
-				'Eigene Prüfungsfragen',
+				'Kontext',
+				'Akteure',
+				'Theorien',
+				'Fallbeispiele',
+				'Kritik',
+				'Prüfungsfragen',
 				'One by one',
 			].join('\n'),
 			folders: ['6 - Main Notes'],
@@ -493,12 +499,12 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 				},
 			},
 			{
-				desc: 'One field per line, in the exact order/name Anki uses for this note type.',
+				desc: 'One field per line, in the exact order/name Anki uses for this note type. Text, Back Extra, and One by one are core fields; any fields in between become optional extra buttons.',
 				name: 'Fields',
 				render: (setting) => {
 					setting.addTextArea((text) => {
 						text
-							.setPlaceholder('Text\nBack Extra')
+							.setPlaceholder('Text\nBack Extra\nDefinitionen\nKontext\nOne by one')
 							.setValue(this.plugin.settings.synki.fields)
 							.onChange((value) => {
 								this.plugin.settings.synki.fields = value
@@ -511,7 +517,7 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 				},
 			},
 			{
-				desc: 'The field that must contain the cloze text.',
+				desc: 'The field that must contain the cloze text. Keep this as Text for the built-in Synki template.',
 				name: 'Text field',
 				render: (setting) => {
 					setting.addText((text) => {
@@ -582,7 +588,8 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 				desc: sanitizeHTMLToDom(
 					html`Updates the configured Anki note type with the built-in card template. This sets
 						the front, back, and styling for one-by-one clozes, <kbd>N</kbd> reveal, and
-						<kbd>X</kbd> extra-field cycling.`,
+						<kbd>X</kbd> extra-field cycling. Extra buttons are generated from the configured
+						fields above, so the note type does not need the original medical fields.`,
 				),
 				name: 'Install Anki card template',
 				render: (setting) => {
@@ -1273,8 +1280,12 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 
 		try {
 			const client = new SynkiConnectClient(this.plugin.settings.ankiConnect)
+			const fields = this.plugin.settings.synki.fields
+				.split('\n')
+				.map((field) => field.trim())
+				.filter((field) => field.length > 0)
 			await client.updateModelTemplate({
-				back: SYNKI_BACK_TEMPLATE,
+				back: buildSynkiBackTemplate(fields),
 				css: SYNKI_STYLING,
 				front: SYNKI_FRONT_TEMPLATE,
 				modelName,
