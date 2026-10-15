@@ -24,7 +24,7 @@ export const SYNKI_FRONT_TEMPLATE = String.raw`<div id="obsidian-card" class="ca
 
 <script>
 (function () {
-    function renderBoldMarkdown(root) {
+    function renderRichMarkdown(root) {
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
         const nodes = [];
 
@@ -34,18 +34,34 @@ export const SYNKI_FRONT_TEMPLATE = String.raw`<div id="obsidian-card" class="ca
 
         nodes.forEach(function (node) {
             const text = node.nodeValue || "";
-            if (!text.includes("**")) {
+            if (!/[*_\[]/.test(text)) {
                 return;
             }
 
             const fragment = document.createDocumentFragment();
-            const parts = text.split(/(\*\*[^*]+\*\*)/g);
+            const parts = text.split(/(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g);
 
             parts.forEach(function (part) {
                 if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
                     const strong = document.createElement("strong");
                     strong.textContent = part.slice(2, -2);
                     fragment.appendChild(strong);
+                } else if (part.startsWith("__") && part.endsWith("__") && part.length > 4) {
+                    const underline = document.createElement("u");
+                    underline.textContent = part.slice(2, -2);
+                    fragment.appendChild(underline);
+                } else if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
+                    const emphasis = document.createElement("em");
+                    emphasis.textContent = part.slice(1, -1);
+                    fragment.appendChild(emphasis);
+                } else if (/^\[[^\]]+\]\(https?:\/\/[^\s)]+\)$/.test(part)) {
+                    const match = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/.exec(part);
+                    if (match) {
+                        const link = document.createElement("a");
+                        link.textContent = match[1];
+                        link.href = match[2];
+                        fragment.appendChild(link);
+                    }
                 } else if (part.length > 0) {
                     fragment.appendChild(document.createTextNode(part));
                 }
@@ -60,7 +76,7 @@ export const SYNKI_FRONT_TEMPLATE = String.raw`<div id="obsidian-card" class="ca
 
     const textContainer = document.getElementById("text");
     if (textContainer) {
-        renderBoldMarkdown(textContainer);
+        renderRichMarkdown(textContainer);
     }
 
     if (!enabledValues.includes(setting)) {
@@ -145,7 +161,7 @@ ${renderExtraButtons(extraFields)}
 
 <script>
 (function () {
-    function renderBoldMarkdown(root) {
+    function renderRichMarkdown(root) {
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
         const nodes = [];
 
@@ -155,18 +171,34 @@ ${renderExtraButtons(extraFields)}
 
         nodes.forEach(function (node) {
             const text = node.nodeValue || "";
-            if (!text.includes("**")) {
+            if (!/[*_\[]/.test(text)) {
                 return;
             }
 
             const fragment = document.createDocumentFragment();
-            const parts = text.split(/(\*\*[^*]+\*\*)/g);
+            const parts = text.split(/(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g);
 
             parts.forEach(function (part) {
                 if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
                     const strong = document.createElement("strong");
                     strong.textContent = part.slice(2, -2);
                     fragment.appendChild(strong);
+                } else if (part.startsWith("__") && part.endsWith("__") && part.length > 4) {
+                    const underline = document.createElement("u");
+                    underline.textContent = part.slice(2, -2);
+                    fragment.appendChild(underline);
+                } else if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
+                    const emphasis = document.createElement("em");
+                    emphasis.textContent = part.slice(1, -1);
+                    fragment.appendChild(emphasis);
+                } else if (/^\[[^\]]+\]\(https?:\/\/[^\s)]+\)$/.test(part)) {
+                    const match = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/.exec(part);
+                    if (match) {
+                        const link = document.createElement("a");
+                        link.textContent = match[1];
+                        link.href = match[2];
+                        fragment.appendChild(link);
+                    }
                 } else if (part.length > 0) {
                     fragment.appendChild(document.createTextNode(part));
                 }
@@ -197,7 +229,7 @@ ${renderExtraButtons(extraFields)}
         return;
     }
 
-    renderBoldMarkdown(document.querySelector(".card-shell"));
+    renderRichMarkdown(document.querySelector(".card-shell"));
 
     function updateProgress(clozeCount) {
         if (progress) {
