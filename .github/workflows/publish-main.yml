@@ -17,7 +17,7 @@ jobs:
           node-version: 24
       - uses: pnpm/action-setup@v4
         with:
-          version: 12
+          version: 12.4.1
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - uses: softprops/action-gh-release@v2
