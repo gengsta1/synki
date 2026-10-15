@@ -36,6 +36,8 @@ import { renameFiles, syncFiles } from 'yanki'
 import { syncCurrentSynkiNote, syncMainNotesSynki, syncSynkiFile } from './synki-sync'
 
 const DRIVE_LETTER_REGEX = /^[A-Z]:/iv
+const SYNKI_MAIN_BUNDLE_URL = 'https://github.com/gengsta1/synki/releases/download/main/main.js'
+const SYNKI_MAIN_MANIFEST_URL = 'https://github.com/gengsta1/synki/releases/download/main/manifest.json'
 
 export default class SynkiPlugin extends Plugin {
 	public override settings: SynkiPluginSettings = getSynkiPluginDefaultSettings(this.app)
@@ -48,6 +50,29 @@ export default class SynkiPlugin extends Plugin {
 		// https://forum.obsidian.md/t/open-settings-for-my-plugin-community-plugin-settings-deeplink/61563/4
 		this.app.setting.open()
 		this.app.setting.openTabById(this.manifest.id)
+	}
+
+	async updateFromGitHubMain(): Promise<void> {
+		try {
+			const [bundle, manifest] = await Promise.all([
+				requestUrl({ url: SYNKI_MAIN_BUNDLE_URL }),
+				requestUrl({ url: SYNKI_MAIN_MANIFEST_URL }),
+			])
+			const pluginDirectory =
+				this.manifest.dir ?? normalizePath(`${this.app.vault.configDir}/plugins/${this.manifest.id}`)
+
+			await this.app.vault.adapter.write(normalizePath(`${pluginDirectory}/main.js`), bundle.text)
+			await this.app.vault.adapter.write(
+				normalizePath(`${pluginDirectory}/manifest.json`),
+				manifest.text,
+			)
+
+			new Notice('Synki: Latest main version installed. Restart Obsidian once to activate it.', 10_000)
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error)
+			console.error('Synki update failed', error)
+			new Notice(`Synki update failed: ${message}`, 10_000)
+		}
 	}
 
 	// ── Sync and rename actions ───────────────────────────────────

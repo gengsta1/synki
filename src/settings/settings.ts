@@ -424,6 +424,17 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 				},
 			},
 			{
+				desc: 'Downloads the newest tested build from the GitHub main branch. Restart Obsidian once afterwards; deleting or reinstalling the plugin is not necessary.',
+				name: 'Update Synki from GitHub',
+				render: (setting) => {
+					setting.addButton((button) => {
+						button.setButtonText('Check and install latest main').onClick(() => {
+							void this.plugin.updateFromGitHubMain()
+						})
+					})
+				},
+			},
+			{
 				desc: sanitizeHTMLToDom(
 					html`Exclude notes with the same name as their parent folder from syncing. Useful in
 						combination with the
