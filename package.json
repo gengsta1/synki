@@ -1,6 +1,6 @@
 {
 	"name": "synki",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "Sync embedded Synki flashcard blocks to Anki.",
 	"keywords": [
 		"obsidian",
