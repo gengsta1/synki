@@ -106,8 +106,27 @@ export default class SynkiPlugin extends Plugin {
 		}
 
 		const files: TFile[] = this.getWatchedFiles()
+		// Notes containing an embedded `## Anki` section belong to the Synki block
+		// pipeline.  Yanki's legacy sync would otherwise send wiki embeds such as
+		// `![[leberzirrhose.jpeg]]` as literal text instead of uploading the image
+		// to Anki's media collection.
+		const legacyFiles: TFile[] = []
+		let containsSynkiBlock = false
+		for (const file of files) {
+			const markdown = await this.app.vault.read(file)
+			if (/^## Anki\s*$/imu.test(markdown)) {
+				containsSynkiBlock = true
+				continue
+			}
+			legacyFiles.push(file)
+		}
 
-		if (files.length === 0) {
+		if (legacyFiles.length === 0 && containsSynkiBlock) {
+			await syncMainNotesSynki(this)
+			return
+		}
+
+		if (legacyFiles.length === 0) {
 			if (userInitiated || this.settings.verboseNotices) {
 				new Notice(
 					sanitizeHtmlToDomWithFunction(
@@ -126,7 +145,7 @@ export default class SynkiPlugin extends Plugin {
 		// All watched files as absolute paths.
 		// Additionally, getSyncFilesOptions pulls paths to ALL assets in the vault
 		// to support resolving wiki links.
-		const filePaths = files.map((file) => this.vaultPathToAbsolutePath(file.path))
+		const filePaths = legacyFiles.map((file) => this.vaultPathToAbsolutePath(file.path))
 
 		try {
 			const report = await syncFiles(filePaths, this.getSyncFilesOptions(this.settings))
@@ -145,6 +164,10 @@ export default class SynkiPlugin extends Plugin {
 			for (const syncedFile of report.synced) {
 				this.settings.stats.sync.notes[syncedFile.action] += 1
 			}
+
+			// Also process embedded Anki blocks through Synki. This route uploads
+			// embedded images to Anki and turns wiki image links into real <img> tags.
+			await syncMainNotesSynki(this)
 
 			if (userInitiated) {
 				this.settings.stats.sync.manual++
