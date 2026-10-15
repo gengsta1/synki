@@ -21,6 +21,7 @@ Dosis: zweimal 8 mg Dexamethason nachts.
 Cave:
 Merksprüche: Zentral lässt sich noch bremsen.
 Eigene Prüfungsfragen: Wie verhält sich der Test bei ektoper ACTH-Produktion?
+Symptombild: ![[Cushing-Syndrom.jpeg]]
 One by one:
 Tags: medicine example diagnosis
 END
@@ -42,6 +43,7 @@ describe('synki parser', () => {
 		expect(parsed.cards[0]?.fields.Text).toContain('{{c1::50 %::Grenzwert}}')
 		expect(parsed.cards[0]?.fields['Back Extra']).toContain('partielle')
 		expect(parsed.cards[0]?.fields.Dosis).toBe('zweimal 8 mg Dexamethason nachts.')
+		expect(parsed.cards[0]?.fields.Symptombild).toBe('![[Cushing-Syndrom.jpeg]]')
 		expect(parsed.cards[0]?.tags).toEqual(['medicine', 'example', 'diagnosis'])
 	})
 

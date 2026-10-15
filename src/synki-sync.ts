@@ -112,7 +112,7 @@ export async function syncSynkiFile(
 
 			const payload: SynkiNotePayload = {
 				deckName: parsed.targetDeck,
-				fields: renderFieldsForAnki(card.fields),
+				fields: await renderFieldsForAnki(plugin, file, client, card.fields),
 				modelName,
 				tags: [...new Set([...parsed.fileTags, ...card.tags])],
 			}
@@ -213,14 +213,65 @@ function parseAliasMap(input: string): Record<string, string> {
 	return aliases
 }
 
-function renderFieldsForAnki(fields: Record<string, string>): Record<string, string> {
-	return Object.fromEntries(
-		Object.entries(fields).map(([field, value]) => [field, renderInlineMarkdown(value)]),
+async function renderFieldsForAnki(
+	plugin: SynkiPlugin,
+	sourceFile: TFile,
+	client: SynkiConnectClient,
+	fields: Record<string, string>,
+): Promise<Record<string, string>> {
+	const rendered = await Promise.all(
+		Object.entries(fields).map(async ([field, value]) => [
+			field,
+			await renderInlineMarkdown(plugin, sourceFile, client, value),
+		] as const),
 	)
+	return Object.fromEntries(rendered)
 }
 
-function renderInlineMarkdown(value: string): string {
-	return value.replace(/\*\*([^*\n][\s\S]*?[^*\n])\*\*/gu, '<strong>$1</strong>')
+async function renderInlineMarkdown(
+	plugin: SynkiPlugin,
+	sourceFile: TFile,
+	client: SynkiConnectClient,
+	value: string,
+): Promise<string> {
+	let rendered = value
+		.replace(/\*\*([^*\n][\s\S]*?[^*\n])\*\*/gu, '<strong>$1</strong>')
+		.replace(/__([^_\n][\s\S]*?[^_\n])__/gu, '<u>$1</u>')
+		.replace(/(?<!\*)\*([^*\n][\s\S]*?[^*\n])\*(?!\*)/gu, '<em>$1</em>')
+		.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gu, '<a href="$2">$1</a>')
+	const matches = [...value.matchAll(/!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/gu)]
+
+	for (const match of matches) {
+		const link = match[1]?.trim()
+		if (link === undefined || link.length === 0) {
+			continue
+		}
+
+		const image = plugin.app.metadataCache.getFirstLinkpathDest(link, sourceFile.path)
+		if (!(image instanceof TFile)) {
+			continue
+		}
+
+		const filename = `synki-${image.path.replaceAll(/[^A-Za-z0-9._-]/gu, '_')}`
+		const binary = new Uint8Array(await plugin.app.vault.readBinary(image))
+		await client.storeMediaFile(filename, toBase64(binary))
+		rendered = rendered.replace(match[0], `<img src="${escapeHtmlAttribute(filename)}">`)
+	}
+
+	return rendered
+}
+
+function toBase64(bytes: Uint8Array): string {
+	let binary = ''
+	const chunkSize = 0x8000
+	for (let index = 0; index < bytes.length; index += chunkSize) {
+		binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize))
+	}
+	return btoa(binary)
+}
+
+function escapeHtmlAttribute(value: string): string {
+	return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;')
 }
 
 function normalizeAliasKey(input: string): string {

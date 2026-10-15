@@ -72,6 +72,10 @@ export class SynkiConnectClient {
 		return notes.some((note) => String(note.noteId) === noteId)
 	}
 
+	public async storeMediaFile(filename: string, data: string): Promise<void> {
+		await this.invoke('storeMediaFile', { data, filename })
+	}
+
 	public async updateModelTemplate(template: SynkiTemplatePayload): Promise<void> {
 		await this.invoke('updateModelTemplates', {
 			model: {

@@ -65,6 +65,37 @@ const RECOMMENDED_ANKI_ADDONS = [
 	},
 ]
 
+const MEDICAL_CLINICAL_FIELDS = [
+	'Text',
+	'Back Extra',
+	'Definitionen',
+	'Mechanismus',
+	'Klinik',
+	'Dosis',
+	'Cave',
+	'Merksprüche',
+	'Eigene Prüfungsfragen',
+	'Symptombild',
+	'One by one',
+]
+
+const INTERNATIONAL_AFFAIRS_MASTER_FIELDS = [
+	'Text',
+	'Back Extra',
+	'Definitionen',
+	'Kontext',
+	'Akteure',
+	'Theorien',
+	'Fallbeispiele',
+	'Kritik',
+	'Prüfungsfragen',
+	'One by one',
+]
+
+function fieldsToSettingValue(fields: string[]): string {
+	return fields.join('\n')
+}
+
 /**
  * Structurally compatible with Obsidian 1.13's `SettingDefinitionRender`, but
  * defined locally so the code also type-checks against pre-1.13 typings, like
@@ -99,6 +130,7 @@ export type SynkiPluginSettings = {
 		mode: 'prompt' | 'response'
 	}
 	synki: {
+		profile: 'custom' | 'international-affairs-master' | 'medical-clinical'
 		defaultModelName: string
 		fieldAliases: string
 		fields: string
@@ -155,6 +187,7 @@ export function getSynkiPluginDefaultSettings(app: App): SynkiPluginSettings {
 			mode: 'prompt',
 		},
 		synki: {
+			profile: 'medical-clinical',
 			defaultModelName: 'Cloze_obsidian',
 			fieldAliases: [
 				'Text=Text',
@@ -174,18 +207,20 @@ export function getSynkiPluginDefaultSettings(app: App): SynkiPluginSettings {
 				'Cave=Cave',
 				'Mnemonics=Merksprüche',
 				'Medical Questions=Eigene Prüfungsfragen',
+				'Symptom image=Symptombild',
 				'One by one=One by one',
 			].join('\n'),
 			fields: [
 				'Text',
 				'Back Extra',
 				'Definitionen',
-				'Kontext',
-				'Akteure',
-				'Theorien',
-				'Fallbeispiele',
-				'Kritik',
-				'Prüfungsfragen',
+				'Mechanismus',
+				'Klinik',
+				'Dosis',
+				'Cave',
+				'Merksprüche',
+				'Eigene Prüfungsfragen',
+				'Symptombild',
 				'One by one',
 			].join('\n'),
 			folders: ['6 - Main Notes'],
@@ -482,6 +517,26 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 				},
 			},
 			{
+				desc: 'Medical clinical installs the German clinical fields and card workflow. International Affairs Master restores the previous general fields. Custom leaves all field names and aliases under your control.',
+				name: 'Synki profile',
+				render: (setting) => {
+					setting.addDropdown((dropdown) => {
+						dropdown
+							.addOptions({
+								custom: 'Custom',
+								'international-affairs-master': 'International Affairs Master',
+								'medical-clinical': 'Medical clinical',
+							})
+							.setValue(this.plugin.settings.synki.profile)
+							.onChange(async (value) => {
+								this.applySynkiProfile(value as SynkiPluginSettings['synki']['profile'])
+								await this.plugin.saveSettings()
+								this.render()
+							})
+					})
+				},
+			},
+			{
 				desc: 'The Anki note type used when a block starts with an alias like “Cloze”.',
 				name: 'Default note type',
 				render: (setting) => {
@@ -490,6 +545,7 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 							.setPlaceholder('Cloze_obsidian')
 							.setValue(this.plugin.settings.synki.defaultModelName)
 							.onChange((value) => {
+								this.plugin.settings.synki.profile = 'custom'
 								this.plugin.settings.synki.defaultModelName = value.trim()
 							})
 						text.inputEl.addEventListener('blur', () => {
@@ -507,6 +563,7 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 							.setPlaceholder('Text\nBack Extra\nDefinitionen\nKontext\nOne by one')
 							.setValue(this.plugin.settings.synki.fields)
 							.onChange((value) => {
+								this.plugin.settings.synki.profile = 'custom'
 								this.plugin.settings.synki.fields = value
 							})
 						text.inputEl.rows = 8
@@ -525,6 +582,7 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 							.setPlaceholder('Text')
 							.setValue(this.plugin.settings.synki.textFieldName)
 							.onChange((value) => {
+								this.plugin.settings.synki.profile = 'custom'
 								this.plugin.settings.synki.textFieldName = value.trim()
 							})
 						text.inputEl.addEventListener('blur', () => {
@@ -542,6 +600,7 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 							.setPlaceholder('Cloze=Cloze_obsidian')
 							.setValue(this.plugin.settings.synki.modelAliases)
 							.onChange((value) => {
+								this.plugin.settings.synki.profile = 'custom'
 								this.plugin.settings.synki.modelAliases = value
 							})
 						text.inputEl.rows = 4
@@ -560,6 +619,7 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 							.setPlaceholder('Definitions=Definitionen')
 							.setValue(this.plugin.settings.synki.fieldAliases)
 							.onChange((value) => {
+								this.plugin.settings.synki.profile = 'custom'
 								this.plugin.settings.synki.fieldAliases = value
 							})
 						text.inputEl.rows = 8
@@ -1185,6 +1245,25 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 
 		this.initialSettings = structuredClone(this.plugin.settings)
 		this.isSettingsOpen = true
+	}
+
+	private applySynkiProfile(profile: SynkiPluginSettings['synki']['profile']): void {
+		this.plugin.settings.synki.profile = profile
+
+		if (profile === 'medical-clinical') {
+			this.plugin.settings.synki.defaultModelName = 'Cloze_obsidian'
+			this.plugin.settings.synki.fields = fieldsToSettingValue(MEDICAL_CLINICAL_FIELDS)
+			this.plugin.settings.synki.textFieldName = 'Text'
+			this.plugin.settings.synki.modelAliases = 'Cloze=Cloze_obsidian'
+			return
+		}
+
+		if (profile === 'international-affairs-master') {
+			this.plugin.settings.synki.defaultModelName = 'Cloze_obsidian'
+			this.plugin.settings.synki.fields = fieldsToSettingValue(INTERNATIONAL_AFFAIRS_MASTER_FIELDS)
+			this.plugin.settings.synki.textFieldName = 'Text'
+			this.plugin.settings.synki.modelAliases = 'Cloze=Cloze_obsidian'
+		}
 	}
 
 	private async testAnkiSetup(): Promise<void> {

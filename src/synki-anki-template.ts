@@ -6,12 +6,13 @@ const DEFAULT_SYNKI_TEMPLATE_FIELDS = [
 	'Text',
 	'Back Extra',
 	'Definitionen',
-	'Kontext',
-	'Akteure',
-	'Theorien',
-	'Fallbeispiele',
-	'Kritik',
-	'Prüfungsfragen',
+	'Mechanismus',
+	'Klinik',
+	'Dosis',
+	'Cave',
+	'Merksprüche',
+	'Eigene Prüfungsfragen',
+	'Symptombild',
 	'One by one',
 ]
 
@@ -54,7 +55,7 @@ export const SYNKI_FRONT_TEMPLATE = String.raw`<div id="obsidian-card" class="ca
         });
     }
 
-    const disabledValues = ["off", "false", "0", "nein", "normal"];
+    const enabledValues = ["true", "on", "1", "ja"];
     const setting = ` + '`{{text:One by one}}`' + String.raw`.trim().toLowerCase();
 
     const textContainer = document.getElementById("text");
@@ -62,7 +63,7 @@ export const SYNKI_FRONT_TEMPLATE = String.raw`<div id="obsidian-card" class="ca
         renderBoldMarkdown(textContainer);
     }
 
-    if (disabledValues.includes(setting)) {
+    if (!enabledValues.includes(setting)) {
         return;
     }
 
@@ -107,12 +108,16 @@ export function buildSynkiBackTemplate(fields: string[] = DEFAULT_SYNKI_TEMPLATE
     </div>
 
     <div id="onebyone-controls" class="onebyone-controls" style="display:none;">
-        <button class="reveal-button" onclick="revealNextCloze(); event.stopPropagation();">
+        <button id="next-point-button" class="reveal-button" onclick="revealNextCloze(); event.stopPropagation();">
             Next point <span class="shortcut">N</span>
         </button>
         <button class="reveal-button secondary" onclick="revealAllClozes(); event.stopPropagation();">
-            Show all
+            Show all <span class="shortcut">,</span>
         </button>
+        <button class="reveal-button secondary" onclick="resetClozes(); event.stopPropagation();">
+            Reset <span class="shortcut">R</span>
+        </button>
+        <span id="onebyone-progress" class="onebyone-progress"></span>
     </div>
 
     <div id="after-answer">
@@ -171,15 +176,19 @@ ${renderExtraButtons(extraFields)}
         });
     }
 
-    const disabledValues = ["off", "false", "0", "nein", "normal"];
+    const enabledValues = ["true", "on", "1", "ja"];
     const oneByOneSetting = ` + '`{{text:One by one}}`' + String.raw`.trim().toLowerCase();
 
     const textContainer = document.getElementById("text");
     const card = document.getElementById("obsidian-card");
     const controls = document.getElementById("onebyone-controls");
+    const nextPointButton = document.getElementById("next-point-button");
+    const progress = document.getElementById("onebyone-progress");
     const afterAnswer = document.getElementById("after-answer");
     let oneByOneEnabled = false;
     let lastExtraShortcutAt = 0;
+    let answers = [];
+    let nextIndex = 0;
 
     if (!textContainer) {
         if (card) {
@@ -189,6 +198,12 @@ ${renderExtraButtons(extraFields)}
     }
 
     renderBoldMarkdown(document.querySelector(".card-shell"));
+
+    function updateProgress(clozeCount) {
+        if (progress) {
+            progress.textContent = nextIndex + " / " + clozeCount;
+        }
+    }
 
     function getPanels() {
         return Array.from(document.querySelectorAll(".field-button[data-panel]"))
@@ -207,10 +222,26 @@ ${renderExtraButtons(extraFields)}
     }
 
     function syncPanelButtons() {
-        Array.from(document.querySelectorAll(".field-button[data-panel]")).forEach(function (button) {
+        const buttons = Array.from(document.querySelectorAll(".field-button[data-panel]"));
+        buttons.forEach(function (button) {
             const panel = document.getElementById(button.getAttribute("data-panel"));
             button.classList.toggle("field-button-active", Boolean(panel && panel.classList.contains("field-visible")));
+            const oldShortcut = button.querySelector(".x-shortcut");
+            if (oldShortcut) {
+                oldShortcut.remove();
+            }
         });
+
+        const nextButton = buttons.find(function (button) {
+            const panel = document.getElementById(button.getAttribute("data-panel"));
+            return panel && !panel.classList.contains("field-visible");
+        });
+        if (nextButton) {
+            const shortcut = document.createElement("span");
+            shortcut.className = "shortcut x-shortcut";
+            shortcut.textContent = "X";
+            nextButton.appendChild(shortcut);
+        }
     }
 
     window.toggleField = function (id) {
@@ -245,7 +276,7 @@ ${renderExtraButtons(extraFields)}
 
     function initOneByOne() {
         const clozes = Array.from(textContainer.querySelectorAll(".cloze"));
-        const enabled = clozes.length >= 2 && !disabledValues.includes(oneByOneSetting);
+        const enabled = clozes.length >= 2 && enabledValues.includes(oneByOneSetting);
 
         if (!enabled) {
             return;
@@ -253,11 +284,9 @@ ${renderExtraButtons(extraFields)}
 
         oneByOneEnabled = true;
 
-        const answers = clozes.map(function (cloze) {
+        answers = clozes.map(function (cloze) {
             return cloze.innerHTML;
         });
-
-        let nextIndex = 0;
 
         clozes.forEach(function (cloze) {
             cloze.innerHTML = "[...]";
@@ -271,6 +300,7 @@ ${renderExtraButtons(extraFields)}
         if (afterAnswer) {
             afterAnswer.style.display = "none";
         }
+        updateProgress(clozes.length);
 
         window.revealNextCloze = function () {
             if (nextIndex >= clozes.length) {
@@ -280,10 +310,11 @@ ${renderExtraButtons(extraFields)}
             clozes[nextIndex].innerHTML = answers[nextIndex];
             clozes[nextIndex].classList.remove("cloze-pending");
             nextIndex += 1;
+            updateProgress(clozes.length);
 
             if (nextIndex >= clozes.length) {
-                if (controls) {
-                    controls.style.display = "none";
+                if (nextPointButton) {
+                    nextPointButton.disabled = true;
                 }
 
                 if (afterAnswer) {
@@ -299,14 +330,34 @@ ${renderExtraButtons(extraFields)}
             });
 
             nextIndex = clozes.length;
+            updateProgress(clozes.length);
 
-            if (controls) {
-                controls.style.display = "none";
+            if (nextPointButton) {
+                nextPointButton.disabled = true;
             }
 
             if (afterAnswer) {
                 afterAnswer.style.display = "block";
             }
+        };
+
+        window.resetClozes = function () {
+            clozes.forEach(function (cloze) {
+                cloze.innerHTML = "[…]";
+                cloze.classList.add("cloze-pending");
+            });
+            nextIndex = 0;
+            if (nextPointButton) {
+                nextPointButton.disabled = false;
+            }
+            if (afterAnswer) {
+                afterAnswer.style.display = "none";
+            }
+            getPanels().forEach(function (panel) {
+                panel.classList.remove("field-visible");
+            });
+            syncPanelButtons();
+            updateProgress(clozes.length);
         };
     }
 
@@ -318,7 +369,17 @@ ${renderExtraButtons(extraFields)}
         window.revealAllClozes = function () {};
     }
 
+    if (typeof window.resetClozes !== "function") {
+        window.resetClozes = function () {};
+    }
+
     initOneByOne();
+
+    document.querySelectorAll(".symptom-field img").forEach(function (image) {
+        image.addEventListener("click", function () {
+            image.classList.toggle("image-zoomed");
+        });
+    });
 
     if (card) {
         card.style.visibility = "visible";
@@ -356,12 +417,17 @@ ${renderExtraButtons(extraFields)}
             event.preventDefault();
             event.stopPropagation();
             window.revealAllClozes();
+            return;
+        }
+
+        if (key === "r" && hasPlainModifier && oneByOneEnabled) {
+            event.preventDefault();
+            event.stopPropagation();
+            window.resetClozes();
         }
     }
 
-    window.addEventListener("keydown", handleReviewShortcut, true);
     document.addEventListener("keydown", handleReviewShortcut, true);
-    document.addEventListener("keyup", handleReviewShortcut, true);
 })();
 </script>`
 }
@@ -387,8 +453,9 @@ function renderExtraPanels(fields: string[]): string {
 		.map((field, index) => {
 			const panelId = `field-extra-${String(index + 1)}`
 			const escapedField = escapeHTML(field)
+			const styleClass = getFieldStyleClass(field)
 			return String.raw`            {{#${field}}}
-            <div id="${panelId}" class="extra-field">
+            <div id="${panelId}" class="extra-field ${styleClass}-field">
                 <div class="field-title">${escapedField}</div>
                 <div class="field-content">{{${field}}}</div>
             </div>
@@ -402,11 +469,25 @@ function renderExtraButtons(fields: string[]): string {
 		.map((field, index) => {
 			const panelId = `field-extra-${String(index + 1)}`
 			const escapedField = escapeHTML(field)
+			const styleClass = getFieldStyleClass(field)
 			return String.raw`            {{#${field}}}
-            <button class="field-button" data-panel="${panelId}" onclick="toggleField('${panelId}'); event.stopPropagation();">${escapedField}</button>
+            <button class="field-button ${styleClass}-button" data-panel="${panelId}" onclick="toggleField('${panelId}'); event.stopPropagation();">${escapedField}</button>
             {{/${field}}}`
 		})
 		.join('\n\n')
+}
+
+function getFieldStyleClass(field: string): string {
+	const normalized = field.toLowerCase()
+	if (normalized.includes('prüfung')) return 'question'
+	if (normalized.includes('definition')) return 'definition'
+	if (normalized.includes('mechanismus')) return 'mechanism'
+	if (normalized.includes('klinik')) return 'clinic'
+	if (normalized.includes('dosis')) return 'dose'
+	if (normalized.includes('cave')) return 'cave'
+	if (normalized.includes('merk')) return 'mnemonic'
+	if (normalized.includes('symptom')) return 'symptom'
+	return 'definition'
 }
 
 function escapeHTML(value: string): string {
@@ -419,36 +500,38 @@ function escapeHTML(value: string): string {
 }
 
 export const SYNKI_STYLING = String.raw`:root {
-    --bg: #f7f7f7;
-    --text: #29292d;
+    --bg: #2f2f31;
+    --text: #ececef;
     --bg-dark: #2f2f31;
-    --text-dark: #e9e9e9;
-    --cloze: #e4564a;
-    --cloze-dark: #ed7770;
-    --bold: #50a14f;
+    --text-dark: #ececef;
+    --cloze: #68c58b;
+    --cloze-dark: #68c58b;
+    --pending: #ee7d88;
+    --bold: #68c58b;
     --extra-bg: rgba(120, 120, 120, 0.08);
     --border: rgba(120, 120, 120, 0.25);
-    --question: #d65c62;
-    --definition: #7d8f9f;
-    --mechanism: #b978d4;
-    --clinic: #2e936d;
-    --dose: #df8619;
-    --cave: #d9534f;
-    --mnemonic: #4172b8;
+    --question: #efad67;
+    --definition: #a3b2c2;
+    --mechanism: #bb9aea;
+    --clinic: #68c58b;
+    --dose: #efad67;
+    --cave: #ee7d88;
+    --mnemonic: #7eb9f3;
+    --symptom: #e99bb5;
     --button-bg: rgba(120, 120, 120, 0.08);
     --button-hover: rgba(120, 120, 120, 0.18);
-    --max-width: 900px;
+    --max-width: 1080px;
 }
 
 .card {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif !important;
-    font-size: 22px;
-    line-height: 1.5;
+    font-size: 21px;
+    line-height: 1.38;
     color: var(--text);
     background: var(--bg);
     text-align: left;
     margin: 0;
-    padding: 22px;
+    padding: 0;
 }
 
 .nightMode.card,
@@ -462,6 +545,7 @@ export const SYNKI_STYLING = String.raw`:root {
     max-width: var(--max-width);
     margin: 0 auto;
     box-sizing: border-box;
+    padding: 32px 40px 82px;
 }
 
 .main-text,
@@ -481,7 +565,8 @@ export const SYNKI_STYLING = String.raw`:root {
 
 .main-text {
     width: 100%;
-    font-size: 1em;
+    font-size: clamp(21px, 2.1vw, 30px);
+    font-weight: 500;
     word-wrap: break-word;
     overflow-wrap: anywhere;
     box-sizing: border-box;
@@ -490,6 +575,20 @@ export const SYNKI_STYLING = String.raw`:root {
 b,
 strong {
     color: var(--bold);
+}
+
+#obsidian-card u {
+    color: #50c8c9;
+    text-decoration-color: #50c8c9;
+    text-underline-offset: 0.12em;
+}
+
+#obsidian-card em {
+    color: #bb9aea;
+}
+
+a {
+    color: #7eb9f3;
 }
 
 .cloze {
@@ -503,7 +602,7 @@ strong {
 }
 
 .cloze-pending {
-    color: var(--cloze) !important;
+    color: var(--pending) !important;
     font-weight: 700;
 }
 
@@ -613,6 +712,14 @@ strong {
 .dose-field { border-left: 4px solid var(--dose); }
 .cave-field { border-left: 4px solid var(--cave); }
 .mnemonic-field { border-left: 4px solid var(--mnemonic); }
+.symptom-field { border-left: 4px solid var(--symptom); }
+.question-field, .dose-field { background: #3b3128; }
+.definition-field { background: #2d3540; }
+.mechanism-field { background: #332d3d; }
+.clinic-field { background: #283a32; }
+.cave-field { background: #3d2b30; }
+.mnemonic-field { background: #2b3442; }
+.symptom-field { background: #3b2d36; }
 
 .field-buttons {
     display: flex;
@@ -630,12 +737,24 @@ strong {
 .dose-button { border-color: var(--dose); }
 .cave-button { border-color: var(--cave); }
 .mnemonic-button { border-color: var(--mnemonic); }
+.symptom-button { border-color: var(--symptom); }
+.question-button, .dose-button { color: #ffd1a1; }
+.definition-button { color: #cad7e5; }
+.mechanism-button { color: #decafa; }
+.clinic-button { color: #b9ecc9; }
+.cave-button { color: #ffc3c8; }
+.mnemonic-button { color: #c4ddff; }
+.symptom-button { color: #ffc7d9; }
+.question-button.field-button-active, .dose-button.field-button-active { background: #70502e; }
+.definition-button.field-button-active { background: #46586b; }
+.mechanism-button.field-button-active { background: #5a4671; }
+.clinic-button.field-button-active { background: #35684f; }
+.cave-button.field-button-active { background: #743f48; }
+.mnemonic-button.field-button-active { background: #405e83; }
+.symptom-button.field-button-active { background: #754459; }
 
 .tags {
-    margin-top: 22px;
-    font-size: 11px;
-    opacity: 0.35;
-    text-align: center;
+    display: none !important;
 }
 
 ul,
@@ -667,10 +786,32 @@ img {
     height: auto;
 }
 
+.symptom-field img {
+    cursor: zoom-in;
+    max-height: 52vh;
+    object-fit: contain;
+}
+
+.symptom-field img.image-zoomed {
+    cursor: zoom-out;
+    max-height: none;
+}
+
 @media (max-width: 600px) {
     .card {
-        font-size: 20px;
-        padding: 14px;
+        font-size: 18px;
+        padding: 0;
+    }
+
+    .card-shell { padding: 24px 18px 135px; }
+
+    .onebyone-controls {
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        margin: 22px -20px 0;
+        padding: 12px 20px;
+        background: #2f2f31f2;
     }
 
     .back-extra,
