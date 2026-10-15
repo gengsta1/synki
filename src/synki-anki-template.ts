@@ -567,6 +567,7 @@ export const SYNKI_STYLING = String.raw`:root {
     width: 100%;
     font-size: clamp(21px, 2.1vw, 30px);
     font-weight: 500;
+    white-space: pre-wrap;
     word-wrap: break-word;
     overflow-wrap: anywhere;
     box-sizing: border-box;
