@@ -1,0 +1,58 @@
+:root {
+  --bg: #2f2f31;
+  --text: #ececef;
+  --muted: #afafb4;
+  --line: #515156;
+  --green: #68c58b;
+  --turquoise: #50c8c9;
+  --violet: #bb9aea;
+  --blue: #7eb9f3;
+  --red: #ee7d88;
+  --orange: #efad67;
+  --slate: #a3b2c2;
+  --panel: #39393c;
+}
+
+.card { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 21px; line-height: 1.38; text-align: left; }
+.card-shell { box-sizing: border-box; max-width: 1080px; margin: 0 auto; padding: 32px 40px 82px; }
+.topic-label { display: inline-block; margin: 0 0 15px; padding: 4px 11px; border: 1px solid var(--slate); border-radius: 999px; color: var(--slate); font-size: 15px; font-weight: 650; letter-spacing: .02em; }
+.main-text { font-size: clamp(21px, 2.1vw, 30px); font-weight: 500; white-space: pre-wrap; }
+.card-shell strong { color: var(--green); }
+.card-shell u { color: var(--turquoise); text-decoration-color: var(--turquoise); text-underline-offset: .12em; }
+.card-shell em { color: var(--violet); }
+a { color: var(--blue); }
+.cloze { color: var(--green); font-weight: 700; }
+.cloze-pending { color: var(--red); }
+#obsidian-card .learning-main-button, #obsidian-card .learning-menu button, #obsidian-card .learning-stage button { border-radius: 999px; border: 1px solid #202023; background: #444447; color: var(--text); padding: 8px 15px; font: inherit; font-size: 17px; font-weight: 650; cursor: pointer; box-shadow: 0 2px 2px #0005; }
+#obsidian-card .learning-menu button:hover, #obsidian-card .learning-stage button:hover { filter: brightness(1.13); }
+
+.onebyone-controls, .field-buttons { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 34px; }
+.reveal-button, .field-button { border: 1px solid #202023; border-radius: 999px; background: #444447; color: var(--text); padding: 8px 15px; font: inherit; font-size: 17px; font-weight: 650; cursor: pointer; box-shadow: 0 2px 2px #0005; }
+.reveal-button:hover, .field-button:hover { filter: brightness(1.13); }
+.reveal-button:disabled { cursor: default; opacity: .42; filter: none; }
+.reveal-button.secondary { color: #c9c9cd; }
+.shortcut { color: #bdbdc2; border: 1px solid #68686d; border-radius: 6px; padding: 0 6px; margin-left: 8px; font-size: .75em; }
+.onebyone-progress { color: var(--muted); font-size: 17px; font-variant-numeric: tabular-nums; }
+
+.back-extra { margin-top: 24px; padding: 15px 17px; border-left: 5px solid var(--green); background: #27392e; border-radius: 8px; font-size: 18px; }
+.extra-field { display: none; margin-top: 14px; padding: 15px 17px; background: var(--panel); border-left: 5px solid var(--blue); border-radius: 8px; font-size: 18px; }
+.extra-field.field-visible { display: block; }
+.field-title { margin-bottom: 8px; font-weight: 750; }
+.field-content img { display: block; max-width: 100%; max-height: 52vh; object-fit: contain; height: auto; margin: 8px auto 0; border-radius: 8px; cursor: zoom-in; transition: max-height .2s ease; }
+.field-content img.image-zoomed { max-height: none; cursor: zoom-out; }
+.question-field { border-color: var(--orange); background: #3b3128; }.definition-field { border-color: var(--slate); background: #2d3540; }.mechanism-field { border-color: var(--violet); background: #332d3d; }.clinic-field { border-color: var(--green); background: #283a32; }.dose-field { border-color: var(--orange); background: #3b3128; }.cave-field { border-color: var(--red); background: #3d2b30; }.mnemonic-field { border-color: var(--blue); background: #2b3442; }.symptom-field { border-color: #e99bb5; background: #3b2d36; }
+.question-button { border-color: var(--orange); color: #ffd1a1; }.definition-button { border-color: var(--slate); color: #cad7e5; }.mechanism-button { border-color: var(--violet); color: #decafa; }.clinic-button { border-color: var(--green); color: #b9ecc9; }.dose-button { border-color: var(--orange); color: #ffd1a1; }.cave-button { border-color: var(--red); color: #ffc3c8; }.mnemonic-button { border-color: var(--blue); color: #c4ddff; }.symptom-button { border-color: #e99bb5; color: #ffc7d9; }
+.question-button.field-button-active { background: #70502e; }.definition-button.field-button-active { background: #46586b; }.mechanism-button.field-button-active { background: #5a4671; }.clinic-button.field-button-active { background: #35684f; }.dose-button.field-button-active { background: #70502e; }.cave-button.field-button-active { background: #743f48; }.mnemonic-button.field-button-active { background: #405e83; }.symptom-button.field-button-active { background: #754459; }
+.tags, .tag { display: none !important; }
+table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: .78em; } th, td { border: 1px solid var(--line); padding: .35em .55em; }
+
+@media (max-width: 650px) {
+  .card { font-size: 18px; }
+  .card-shell { padding: 24px 18px 135px; }
+  .main-text { font-size: 23px; }
+  .topic-label { font-size: 13px; margin-bottom: 12px; }
+  .onebyone-controls, .field-buttons { gap: 8px; }
+  .onebyone-controls { position: sticky; bottom: 0; z-index: 5; margin: 22px -20px 0; padding: 12px 20px; background: #2f2f31f2; border-top: 1px solid var(--line); }
+  .reveal-button, .field-button { padding: 9px 13px; font-size: 16px; }
+  .onebyone-progress { font-size: 16px; }
+}

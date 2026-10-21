@@ -35,7 +35,7 @@ The important differences:
 - **Decks come from `TARGET DECK`.** The new sync command does not derive the deck from the Obsidian folder path.
 - **Tags are merged.** `FILE TAGS` are combined with each card's own `Tags` field.
 - **Stable updates.** New cards get `<!--ANKI-NOTE-ID: ...-->` after `END`, so later syncs update the same Anki note instead of creating duplicates.
-- **Profiles plus custom note types.** `Medical clinical` is the default profile and includes `Symptombild`; `International Affairs Master` restores the previous general field set; `Custom` exposes the note type, fields, aliases, and source folders for any own setup.
+- **Profiles plus custom note types.** `Medical clinical` is the default profile and includes `Thema`, `Hint`, `Mündliche Präsentation`, `Klinischer Algorithmus`, `Oberarzt-Modus`, and `Symptombild`; `International Affairs Master` restores the previous general field set; `Custom` exposes the note type, fields, aliases, and source folders for any own setup.
 - **Two block-sync commands.** Sync only the current note, or sync every note in the configured block-sync folders.
 - **Basic inline Markdown.** `**bold text**` in block fields is sent to Anki as bold HTML.
 - **Review controls for richer cards.** One-by-one cards can reveal clozes with <kbd>N</kbd>, reveal all clozes with <kbd>,</kbd>, and cycle extra field panels with <kbd>X</kbd>. <kbd>Space</kbd> stays reserved for Anki's normal review flow.
@@ -77,6 +77,8 @@ Run `Synki: Sync this note` for the active note, or `Synki: Sync all block folde
 New cards get a stable `<!--ANKI-NOTE-ID: ...-->` comment after `END`, so later syncs update the same Anki note instead of creating duplicates.
 
 The original Yanki folder-sync command is still present for reference, but the new block workflow uses `TARGET DECK` directly instead of deriving decks from folders.
+
+The block sync sends every named field in a card, including populated learning-mode fields, even if an existing vault still has the older saved medical field list. The **Install / update template** button installs the current medical Front, Back, and Style when the Medical clinical profile (or a matching custom medical field set) is selected. It adds any missing medical fields to the Anki note type and saved field configuration first. International Affairs and other custom field sets retain the configurable template.
 
 ## Anki review controls
 

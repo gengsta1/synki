@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { insertSyncedNoteIds, parseSynkiDocument, splitTags } from '../src/synki-parser'
+import { DEFAULT_SYNKI_PARSER_OPTIONS, insertSyncedNoteIds, parseSynkiDocument, splitTags } from '../src/synki-parser'
 
 const sample = `# Cushing-Syndrom
 
@@ -77,5 +77,37 @@ END
 		expect(parsed.cards[0]?.fields.Definitionen).toBe('English field label')
 		expect(parsed.cards[0]?.fields.Mechanismus).toBe('English mechanism')
 		expect(parsed.cards[0]?.fields.Dosis).toBe('English dose')
+	})
+
+	test('preserves multiline learning modes with the legacy medical field configuration', () => {
+		const parsed = parseSynkiDocument(`## Anki
+TARGET DECK: Medicine::M3
+
+START
+Cloze_obsidian
+Text: Welche Diagnostik ist entscheidend? {{c1::Koloskopie}}
+Thema: Morbus Crohn
+Hint: Denke an die Endoskopie.
+Mündliche Präsentation: Zuerst beschreibe ich die Beschwerden.
+Clinical algorithm:
+Ersteinschätzung | Was ist akut gefährlich? | Peritonitis ausschließen | Bei Abwehrspannung sofort chirurgisch vorstellen.
+Diagnostik | Welche Untersuchung bestätigt den Verdacht? | Ileokoloskopie mit Biopsien
+Oberarzt mode:
+Diagnostik | Was zeigt die Histologie? | Eine diskontinuierliche chronische Entzündung.
+Diagnostik | Was schließt ein unauffälliges CRP nicht aus? | Eine aktive Entzündung.
+One by one: true
+END
+`, {
+			...DEFAULT_SYNKI_PARSER_OPTIONS,
+			fields: ['Text', 'Back Extra', 'One by one'],
+		})
+
+		expect(parsed.errors).toEqual([])
+		expect(parsed.cards[0]?.fields.Thema).toBe('Morbus Crohn')
+		expect(parsed.cards[0]?.fields.Hint).toBe('Denke an die Endoskopie.')
+		expect(parsed.cards[0]?.fields['Mündliche Präsentation']).toContain('beschreibe')
+		expect(parsed.cards[0]?.fields['Klinischer Algorithmus']).toContain('Diagnostik | Welche')
+		expect(parsed.cards[0]?.fields['Oberarzt-Modus']).toContain('Was schließt')
+		expect(parsed.cards[0]?.fields['One by one']).toBe('true')
 	})
 })

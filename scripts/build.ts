@@ -134,6 +134,10 @@ const context = await esbuild.context({
 		'zlib',
 	],
 	format: 'cjs',
+	loader: {
+		'.html': 'text',
+		'.txt': 'text',
+	},
 	logLevel: 'error',
 	minify: production,
 	outbase: 'dist',

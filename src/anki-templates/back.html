@@ -1,0 +1,644 @@
+
+<!--
+OBSIDIAN / SYNKI – KOMPLETTES BACK TEMPLATE
+Ersetzt den gesamten bisherigen Back-Template-Inhalt.
+FRONT TEMPLATE und vorhandenes STYLING bleiben unverändert.
+Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
+-->
+<div id="obsidian-card" class="card-shell" style="visibility:hidden;">
+  {{#Thema}}<div class="topic-label">{{Thema}}</div>{{/Thema}}
+
+  <!-- 1. KARTENFRAGE (IMMER OBEN) -->
+  <div id="text" class="main-text">{{cloze:Text}}</div>
+
+  <!-- 2. BEKANNTE CLOZE-BUTTONS DIREKT UNTER DER FRAGE -->
+  <div id="onebyone-controls" class="onebyone-controls" style="display:none;">
+    <button type="button" id="next-point-button" class="reveal-button"
+      onclick="revealNextCloze(); event.stopPropagation();">
+      Next point <span class="shortcut">N</span>
+    </button>
+    <button type="button" class="reveal-button secondary"
+      onclick="revealAllClozes(); event.stopPropagation();">
+      Show all <span class="shortcut">,</span>
+    </button>
+    <button type="button" class="reveal-button secondary"
+      onclick="resetClozes(); event.stopPropagation();">
+      Reset <span class="shortcut">C</span>
+    </button>
+    <span id="onebyone-progress" class="onebyone-progress"></span>
+  </div>
+
+  <!-- 3. LERNMODI UNTER DEN FRAGEN -->
+  <div id="learning-bar" class="learning-bar">
+    <button type="button" id="learning-menu-button" class="learning-main-button"
+      aria-expanded="false" aria-controls="learning-menu">⋯ Lernmodi</button>
+    <div id="learning-menu" class="learning-menu" hidden>
+      {{#Hint}}<button type="button" data-learn="hint" id="smart-hint-button">💡 Hint</button>{{/Hint}}
+      {{^Hint}}<button type="button" class="learning-unavailable" disabled title="Kein Hint hinterlegt">💡 Hint</button>{{/Hint}}
+      <button type="button" data-learn="blind">🧠 Blind Recall</button>
+      <button type="button" data-learn="random" id="random-mode-button" aria-pressed="false">🎲 Random Cloze</button>
+      {{#Mündliche Präsentation}}<button type="button" data-learn="oral">🎤 Oral Exam</button>{{/Mündliche Präsentation}}
+      {{^Mündliche Präsentation}}<button type="button" class="learning-unavailable" disabled title="Keine mündliche Präsentation hinterlegt">🎤 Oral Exam</button>{{/Mündliche Präsentation}}
+      <button type="button" data-learn="weak">🎯 Weak Spot Replay</button>
+      {{#Klinischer Algorithmus}}<button type="button" data-learn="algorithm">🩺 Clinical Algorithm</button>{{/Klinischer Algorithmus}}
+      {{^Klinischer Algorithmus}}<button type="button" class="learning-unavailable" disabled title="Kein klinischer Algorithmus hinterlegt">🩺 Clinical Algorithm</button>{{/Klinischer Algorithmus}}
+      {{#Oberarzt-Modus}}<button type="button" data-learn="oberarzt">👨‍⚕️ Oberarzt-Hakensprung</button>{{/Oberarzt-Modus}}
+      {{^Oberarzt-Modus}}<button type="button" class="learning-unavailable" disabled title="Kein Oberarzt-Modus hinterlegt">👨‍⚕️ Oberarzt-Hakensprung</button>{{/Oberarzt-Modus}}
+    </div>
+    {{#Hint}}<div id="hint-source" hidden>{{Hint}}</div>{{/Hint}}
+    {{#Mündliche Präsentation}}<div id="oral-source" hidden>{{Mündliche Präsentation}}</div>{{/Mündliche Präsentation}}
+    {{#Klinischer Algorithmus}}<div id="algorithm-source" hidden>{{Klinischer Algorithmus}}</div>{{/Klinischer Algorithmus}}
+    {{#Oberarzt-Modus}}<div id="oberarzt-source" hidden>{{Oberarzt-Modus}}</div>{{/Oberarzt-Modus}}
+    <div id="hint-result" class="learning-hint-result" aria-live="polite"></div>
+    <div id="learning-status" class="learning-status" aria-live="polite"></div>
+  </div>
+  <section id="learning-stage" class="learning-stage" hidden></section>
+
+  <!-- 4. ZUSATZFELDER – WIE BISHER -->
+  <div id="after-answer">
+    {{#Back Extra}}
+    <div id="obsidian-back-extra" class="back-extra">{{Back Extra}}</div>
+    {{/Back Extra}}
+
+    <div class="extra-panels">
+      {{#Definitionen}}
+      <div id="field-extra-1" class="extra-field definition-field">
+        <div class="field-title">Definitionen</div>
+        <div class="field-content">{{Definitionen}}</div>
+      </div>
+      {{/Definitionen}}
+      {{#Mechanismus}}
+      <div id="field-extra-2" class="extra-field mechanism-field">
+        <div class="field-title">Mechanismus</div>
+        <div class="field-content">{{Mechanismus}}</div>
+      </div>
+      {{/Mechanismus}}
+      {{#Klinik}}
+      <div id="field-extra-3" class="extra-field clinic-field">
+        <div class="field-title">Klinik</div>
+        <div class="field-content">{{Klinik}}</div>
+      </div>
+      {{/Klinik}}
+      {{#Dosis}}
+      <div id="field-extra-4" class="extra-field dose-field">
+        <div class="field-title">Dosis</div>
+        <div class="field-content">{{Dosis}}</div>
+      </div>
+      {{/Dosis}}
+      {{#Cave}}
+      <div id="field-extra-5" class="extra-field cave-field">
+        <div class="field-title">Cave</div>
+        <div class="field-content">{{Cave}}</div>
+      </div>
+      {{/Cave}}
+      {{#Merksprüche}}
+      <div id="field-extra-6" class="extra-field mnemonic-field">
+        <div class="field-title">Merksprüche</div>
+        <div class="field-content">{{Merksprüche}}</div>
+      </div>
+      {{/Merksprüche}}
+      {{#Eigene Prüfungsfragen}}
+      <div id="field-extra-7" class="extra-field question-field">
+        <div class="field-title">Eigene Prüfungsfragen</div>
+        <div class="field-content">{{Eigene Prüfungsfragen}}</div>
+      </div>
+      {{/Eigene Prüfungsfragen}}
+      {{#Symptombild}}
+      <div id="field-extra-8" class="extra-field symptom-field">
+        <div class="field-title">Symptombild</div>
+        <div class="field-content">{{Symptombild}}</div>
+      </div>
+      {{/Symptombild}}
+    </div>
+
+    <div class="field-buttons">
+      {{#Definitionen}}
+      <button type="button" class="field-button definition-button" data-panel="field-extra-1" onclick="toggleField('field-extra-1'); event.stopPropagation();">Definitionen</button>
+      {{/Definitionen}}
+      {{#Mechanismus}}
+      <button type="button" class="field-button mechanism-button" data-panel="field-extra-2" onclick="toggleField('field-extra-2'); event.stopPropagation();">Mechanismus</button>
+      {{/Mechanismus}}
+      {{#Klinik}}
+      <button type="button" class="field-button clinic-button" data-panel="field-extra-3" onclick="toggleField('field-extra-3'); event.stopPropagation();">Klinik</button>
+      {{/Klinik}}
+      {{#Dosis}}
+      <button type="button" class="field-button dose-button" data-panel="field-extra-4" onclick="toggleField('field-extra-4'); event.stopPropagation();">Dosis</button>
+      {{/Dosis}}
+      {{#Cave}}
+      <button type="button" class="field-button cave-button" data-panel="field-extra-5" onclick="toggleField('field-extra-5'); event.stopPropagation();">Cave</button>
+      {{/Cave}}
+      {{#Merksprüche}}
+      <button type="button" class="field-button mnemonic-button" data-panel="field-extra-6" onclick="toggleField('field-extra-6'); event.stopPropagation();">Merksprüche</button>
+      {{/Merksprüche}}
+      {{#Eigene Prüfungsfragen}}
+      <button type="button" class="field-button question-button" data-panel="field-extra-7" onclick="toggleField('field-extra-7'); event.stopPropagation();">Eigene Prüfungsfragen</button>
+      {{/Eigene Prüfungsfragen}}
+      {{#Symptombild}}
+      <button type="button" class="field-button symptom-button" data-panel="field-extra-8" onclick="toggleField('field-extra-8'); event.stopPropagation();">Symptombild</button>
+      {{/Symptombild}}
+    </div>
+
+    {{#Tags}}<div class="tags">{{Tags}}</div>{{/Tags}}
+  </div>
+
+  <!-- AnkiMobile: unsichtbare Auslöser für die bewährte .click()-Methode -->
+  <div id="ankimobile-actions" hidden>
+    <button type="button" id="ua2" onclick="showNextExtraPanel()"></button>
+    <button type="button" id="ua3" onclick="resetClozes()"></button>
+    <button type="button" id="ua4" onclick="revealAllClozes()"></button>
+    <button type="button" id="ua5" onclick="hidePreviousExtraPanel()"></button>
+    <button type="button" id="ua6" onclick="hidePreviousCloze()"></button>
+    <button type="button" id="ua7" onclick="toggleAllExtraPanels()"></button>
+    <button type="button" id="ua8" onclick="toggleBackExtra()"></button>
+  </div>
+</div>
+
+<!-- Nur das neue Lernmenü stylen; dein vorhandenes Styling bleibt erhalten. -->
+<style>
+#obsidian-card .learning-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 18px}
+#obsidian-card .learning-main-button,#obsidian-card .learning-menu button,
+#obsidian-card .learning-stage button{font:inherit;color:var(--text,#ececef);background:#444447;border:1px solid #202023;border-radius:999px;padding:8px 15px;min-height:40px;font-size:17px;font-weight:650;cursor:pointer;touch-action:manipulation;box-shadow:0 2px 2px #0005}
+#obsidian-card #learning-menu-button[aria-expanded="true"],#obsidian-card .learning-menu button[aria-pressed="true"]{border-color:var(--cloze,#68c58b);background:rgba(104,197,139,.13)}
+#obsidian-card .learning-menu{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+#obsidian-card .learning-menu button{text-align:left;font-size:17px}
+#obsidian-card .learning-menu button:disabled{opacity:.38;color:var(--muted,#afafb4);background:#38383b;border-color:#424247;box-shadow:none;cursor:not-allowed;filter:none}
+#obsidian-card .learning-hint-result{width:100%;font-size:14px;color:var(--cloze,#68c58b);overflow-wrap:anywhere}
+#obsidian-card .learning-status{width:100%;font-size:12px;opacity:.75}
+#obsidian-card .learning-stage{background:var(--extra-bg,rgba(120,120,120,.08));border:1px solid var(--border,#666);border-radius:9px;padding:14px;margin:8px 0 18px;line-height:1.55;overflow-wrap:anywhere}
+#obsidian-card .learning-stage h4{font-size:18px;margin:0 0 10px}
+#obsidian-card .learning-stage p{margin:8px 0}
+#obsidian-card .learning-stage button{margin:7px 7px 3px 0}
+#obsidian-card .learning-stage .learning-timer{font-size:28px;color:var(--cloze,#68c58b);font-weight:750;margin:10px 0}
+#obsidian-card .learning-solution{margin:9px 0;padding:10px;background:var(--extra-bg,rgba(120,120,120,.08));border-left:3px solid var(--cloze,#68c58b)}
+#obsidian-card .learning-weak-star{font-size:19px;line-height:1.1;background:transparent;border:0;color:#e7b34d;padding:2px 4px;margin:0 2px;cursor:pointer;vertical-align:baseline;touch-action:manipulation}
+#obsidian-card .learning-weak-star[aria-pressed="true"]{color:#ef878d}
+#obsidian-card .learning-menu[hidden],#obsidian-card .learning-stage[hidden],#obsidian-card .learning-weak-star[hidden],#obsidian-card #ankimobile-actions[hidden]{display:none!important}
+#obsidian-card .learning-stage ol{margin:7px 0;padding-left:24px}
+#obsidian-card .learning-stage input[type="checkbox"]{margin-right:8px;accent-color:var(--cloze,#68c58b)}
+@media(max-width:600px){#obsidian-card .learning-main-button,#obsidian-card .learning-menu button,#obsidian-card .learning-stage button{font-size:16px;padding:9px 13px}#obsidian-card .learning-stage{padding:12px}}
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  // Desktop-Anki verwendet die Webansicht teilweise mehrfach.
+  if (typeof window.__obsidianCleanup === "function") window.__obsidianCleanup();
+
+  var card = document.getElementById("obsidian-card");
+  if (!card) return;
+  var text = card.querySelector("#text");
+  var after = card.querySelector("#after-answer");
+  var controls = card.querySelector("#onebyone-controls");
+  var nextButton = card.querySelector("#next-point-button");
+  var progress = card.querySelector("#onebyone-progress");
+  var menu = card.querySelector("#learning-menu");
+  var menuButton = card.querySelector("#learning-menu-button");
+  var hintSource = card.querySelector("#hint-source");
+  var oralSource = card.querySelector("#oral-source");
+  var algorithmSource = card.querySelector("#algorithm-source");
+  var oberarztSource = card.querySelector("#oberarzt-source");
+  var hintResult = card.querySelector("#hint-result");
+  var stage = card.querySelector("#learning-stage");
+  var status = card.querySelector("#learning-status");
+  var randomButton = card.querySelector("#random-mode-button");
+  var m3Source = card.querySelector("#field-extra-7 .field-content");
+  if (!text) return;
+
+  function el(tag, cls, content) {
+    var x = document.createElement(tag);
+    if (cls) x.className = cls;
+    if (content !== undefined) x.textContent = content;
+    return x;
+  }
+  function addButton(parent, label, fn) {
+    var b = el("button", "", label);
+    b.type = "button";
+    b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); fn(); });
+    parent.appendChild(b);
+    return b;
+  }
+  function notify(s) { status.textContent = s || ""; }
+  function refreshMarkdown(root) {
+    if (!root) return;
+    var walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    var nodes = [];
+    while (walk.nextNode()) nodes.push(walk.currentNode);
+    nodes.forEach(function (node) {
+      var s = node.nodeValue || "";
+      if (!/[\*_\[]/.test(s)) return;
+      var parts = s.split(/(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g);
+      if (parts.length === 1) return;
+      var frag = document.createDocumentFragment();
+      parts.forEach(function (p) {
+        var item = null;
+        if (/^\*\*[^*]+\*\*$/.test(p)) {
+          item = el("strong", "", p.slice(2,-2));
+        } else if (/^__[^_]+__$/.test(p)) {
+          item = el("u", "", p.slice(2,-2));
+        } else if (/^\*[^*]+\*$/.test(p)) {
+          item = el("em", "", p.slice(1,-1));
+        } else {
+          var match = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/.exec(p);
+          if (match) { item = el("a", "", match[1]); item.href = match[2]; }
+        }
+        frag.appendChild(item || document.createTextNode(p));
+      });
+      if (node.parentNode) node.parentNode.replaceChild(frag, node);
+    });
+  }
+  refreshMarkdown(text);
+  card.querySelectorAll(".back-extra,.field-content,#hint-source,#oral-source").forEach(refreshMarkdown);
+
+  var clozes = Array.from(text.querySelectorAll(".cloze"));
+  var val = `{{text:One by one}}`.trim().toLowerCase();
+  var oneByOne = ["true","on","1","ja","yes"].indexOf(val) !== -1 && clozes.length >= 2;
+  var answers = clozes.map(function (c) { return c.innerHTML; });
+  var answerTexts = clozes.map(function (c) { return (c.textContent || "").replace(/\s+/g," ").trim(); });
+  var shown = clozes.map(function () { return !oneByOne; });
+  var weak = clozes.map(function () { return false; });
+  var history = [];
+  var random = false;
+  var mode = "normal";
+  var snapshot = null;
+  var activeTimer = null;
+  var hintVisible = false;
+
+  function getPanels() { return Array.from(card.querySelectorAll(".extra-field")); }
+  function completed() { return shown.every(Boolean); }
+  function hidden() { return shown.map(function (v,i) { return v ? -1 : i; }).filter(function (i) { return i >= 0; }); }
+  function cancelTimer() { if (activeTimer !== null) clearInterval(activeTimer); activeTimer = null; }
+  function clearHint() { hintVisible = false; hintResult.textContent = ""; }
+  function syncPanels() {
+    var buttons = Array.from(card.querySelectorAll(".field-button[data-panel]"));
+    buttons.forEach(function (b) {
+      var id = b.getAttribute("data-panel"), p = card.querySelector("#" + id);
+      b.classList.toggle("field-button-active", !!p && p.classList.contains("field-visible"));
+      var old = b.querySelector(".x-shortcut"); if (old) old.remove();
+    });
+    var first = buttons.find(function (b) {
+      var p = card.querySelector("#" + b.getAttribute("data-panel"));
+      return p && !p.classList.contains("field-visible");
+    });
+    if (first) first.appendChild(el("span", "shortcut x-shortcut", "X"));
+  }
+  var stars = clozes.map(function (c,i) {
+    var b = el("button", "learning-weak-star", "☆");
+    b.type = "button";
+    b.title = "Cloze " + (i+1) + " als unsicher markieren";
+    b.setAttribute("aria-label", b.title);
+    b.addEventListener("click", function (e) {
+      e.preventDefault(); e.stopPropagation();
+      if (!shown[i] || mode !== "normal") return;
+      weak[i] = !weak[i]; draw();
+      notify(weak.filter(Boolean).length + " schwache Cloze(s) markiert.");
+    });
+    c.insertAdjacentElement("afterend", b);
+    return b;
+  });
+  function draw(forceAll) {
+    clozes.forEach(function (c,i) {
+      var visible = forceAll || shown[i];
+      c.innerHTML = visible ? answers[i] : "[...]";
+      c.classList.toggle("cloze-pending", !visible);
+      stars[i].hidden = !oneByOne || !shown[i] || mode !== "normal";
+      stars[i].textContent = weak[i] ? "★" : "☆";
+      stars[i].setAttribute("aria-pressed", weak[i] ? "true" : "false");
+    });
+    if (controls) controls.style.display = oneByOne ? "flex" : "none";
+    if (progress && oneByOne) progress.textContent = shown.filter(Boolean).length + " / " + clozes.length;
+    if (nextButton) nextButton.disabled = !oneByOne || completed() || mode !== "normal";
+    if (mode === "normal" && after) after.style.display = (oneByOne && !completed()) ? "none" : "block";
+  }
+
+  // BASIC ACTIONS: always use the same cloze state, including Random + Weak Replay.
+  window.revealNextCloze = function () {
+    if (!oneByOne || mode !== "normal") return false;
+    var candidates = hidden(); if (!candidates.length) return false;
+    var i = random ? candidates[Math.floor(Math.random()*candidates.length)] : candidates[0];
+    shown[i] = true; history.push(i); clearHint(); draw(); return true;
+  };
+  window.hidePreviousCloze = function () {
+    if (!oneByOne || mode !== "normal") return false;
+    var i = -1;
+    while (history.length && i < 0) { var j = history.pop(); if (shown[j]) i = j; }
+    if (i < 0) i = shown.lastIndexOf(true);
+    if (i < 0) return false;
+    shown[i] = false; clearHint(); draw(); return true;
+  };
+  window.revealAllClozes = function () {
+    if (!oneByOne || mode !== "normal") return false;
+    shown.fill(true); history = clozes.map(function (_,i) { return i; });
+    clearHint(); draw(); return true;
+  };
+  window.resetClozes = function () {
+    if (!oneByOne || mode !== "normal") return false;
+    shown.fill(false); weak.fill(false); history = []; clearHint();
+    getPanels().forEach(function (p) { p.classList.remove("field-visible"); });
+    var bx = card.querySelector("#obsidian-back-extra"); if (bx) bx.style.display = "";
+    draw(); syncPanels(); return true;
+  };
+  window.toggleField = function (id) {
+    if (mode !== "normal" || (oneByOne && !completed())) return false;
+    var p = card.querySelector("#" + id);
+    if (!p || !p.classList.contains("extra-field")) return false;
+    p.classList.toggle("field-visible"); syncPanels(); return true;
+  };
+  window.showNextExtraPanel = function () {
+    if (mode !== "normal" || (oneByOne && !completed())) return false;
+    var p = getPanels(), next = p.find(function (x) { return !x.classList.contains("field-visible"); });
+    if (!p.length) return false;
+    if (next) next.classList.add("field-visible");
+    else p.forEach(function (x) { x.classList.remove("field-visible"); });
+    syncPanels(); return true;
+  };
+  window.hidePreviousExtraPanel = function () {
+    if (mode !== "normal" || (oneByOne && !completed())) return false;
+    var p = getPanels().filter(function (x) { return x.classList.contains("field-visible"); });
+    if (!p.length) return false;
+    p[p.length-1].classList.remove("field-visible"); syncPanels(); return true;
+  };
+  window.toggleAllExtraPanels = function () {
+    if (mode !== "normal" || (oneByOne && !completed())) return false;
+    var p = getPanels(); if (!p.length) return false;
+    var all = p.every(function (x) { return x.classList.contains("field-visible"); });
+    p.forEach(function (x) { x.classList.toggle("field-visible", !all); });
+    syncPanels(); return true;
+  };
+  window.toggleBackExtra = function () {
+    if (mode !== "normal" || (oneByOne && !completed())) return false;
+    var bx = card.querySelector("#obsidian-back-extra"); if (!bx) return false;
+    bx.style.display = bx.style.display === "none" ? "" : "none"; return true;
+  };
+
+  // Der Hint ist ein eigener, nicht-verratender Denkimpuls aus dem Kartenfeld.
+  window.showSmartHint = function () {
+    if (mode !== "normal") { notify("Zuerst den Lernmodus beenden."); return false; }
+    if (!hintSource || !hintSource.textContent.trim()) return false;
+    hintVisible = !hintVisible;
+    if (!hintVisible) hintResult.textContent = "";
+    else hintResult.innerHTML = hintSource.innerHTML;
+    closeMenu();
+    return true;
+  };
+
+  function closeMenu() { menu.hidden = true; menuButton.setAttribute("aria-expanded","false"); }
+  menuButton.addEventListener("click", function (e) {
+    e.stopPropagation(); menu.hidden = !menu.hidden;
+    menuButton.setAttribute("aria-expanded",String(!menu.hidden));
+  });
+  function title(s) { stage.appendChild(el("h4","",s)); }
+  function para(s) { stage.appendChild(el("p","",s)); }
+  function saveState() {
+    var bx = card.querySelector("#obsidian-back-extra");
+    return { shown:shown.slice(), history:history.slice(), opened:getPanels().map(function (p) { return p.classList.contains("field-visible"); }), bx:bx ? bx.style.display : "" };
+  }
+  function showEverything() {
+    text.style.display = ""; draw(true);
+    if (after) after.style.display = "block";
+    getPanels().forEach(function (p) { p.classList.add("field-visible"); });
+    var bx = card.querySelector("#obsidian-back-extra"); if (bx) bx.style.display = "";
+    syncPanels();
+  }
+  function hideContent() { text.style.display = "none"; if (after) after.style.display = "none"; }
+  function restore() {
+    cancelTimer(); mode = "normal"; stage.hidden = true; stage.replaceChildren(); text.style.display = "";
+    if (snapshot) {
+      shown = snapshot.shown.slice(); history = snapshot.history.slice();
+      getPanels().forEach(function (p,i) { p.classList.toggle("field-visible",!!snapshot.opened[i]); });
+      var bx = card.querySelector("#obsidian-back-extra"); if (bx) bx.style.display = snapshot.bx;
+      snapshot = null;
+    }
+    draw(); syncPanels(); notify("Normaler Lernmodus.");
+  }
+  function begin(name) {
+    if (mode !== "normal") restore();
+    snapshot = saveState(); mode = name; stage.hidden = false;
+    stage.replaceChildren(); closeMenu(); clearHint(); draw();
+  }
+
+  // 🧠 BLIND RECALL: all visible for 5 seconds, then hidden, then compare.
+  function blindStart() {
+    begin("blindPreview"); showEverything();
+    title("🧠 5 Sekunden einprägen");
+    var seconds = 5, clock = el("div","learning-timer",seconds+" s"); stage.appendChild(clock);
+    addButton(stage,"Jetzt verdecken",blindHide);
+    activeTimer = setInterval(function () { seconds--; clock.textContent = seconds+" s"; if (seconds <= 0) blindHide(); },1000);
+  }
+  function blindHide() {
+    if (mode !== "blindPreview") return;
+    cancelTimer(); mode = "blindHidden"; hideContent(); stage.replaceChildren();
+    title("🧠 Was stand auf der Karte?");
+    para("Erkläre den Inhalt frei. Danach kannst du die vollständige Lösung vergleichen.");
+    addButton(stage,"Lösung vergleichen",function () {
+      mode = "blindCompare"; stage.replaceChildren(); title("🧠 Selbstkontrolle");
+      addButton(stage,"Normalen Modus fortsetzen",restore); showEverything();
+    });
+    addButton(stage,"Abbrechen",restore);
+  }
+
+  // 🎲 RANDOM: existing Next point and AnkiMobile User Action 1 draw a random hidden cloze.
+  function randomToggle() {
+    if (!oneByOne) return notify("Random benötigt One by one = true und mindestens zwei Clozes.");
+    if (mode !== "normal") restore(); random = !random;
+    randomButton.setAttribute("aria-pressed",String(random));
+    notify(random ? "🎲 Zufall aktiv: Next wählt eine zufällige verdeckte Cloze." : "Normale Reihenfolge aktiv.");
+    closeMenu();
+  }
+
+  // 🎤 ORAL EXAM: topic only, timer, then checklist using actual card answers.
+  function topicCue() {
+    var label = card.querySelector(".topic-label");
+    if (label && label.textContent.trim()) return label.textContent.trim();
+    var clone = text.cloneNode(true);
+    clone.querySelectorAll(".cloze,.learning-weak-star").forEach(function (c) { c.remove(); });
+    return (clone.textContent || "").replace(/\s+/g," ").trim().slice(0,125) || "Thema dieser Karte";
+  }
+  function oralStart() {
+    var topic = topicCue(); begin("oralSpeaking"); hideContent();
+    title("🎤 M3: Mündliche Antwort"); para("Thema: " + topic);
+    para("Erkläre die Zusammenhänge strukturiert und laut, wie in der Prüfung.");
+    var seconds = 30, clock = el("div","learning-timer",seconds+" s"); stage.appendChild(clock);
+    addButton(stage,"Checkliste anzeigen",oralCheck); addButton(stage,"Abbrechen",restore);
+    activeTimer = setInterval(function () { seconds--; clock.textContent = seconds+" s"; if (seconds <= 0) oralCheck(); },1000);
+  }
+  function oralCheck() {
+    if (mode !== "oralSpeaking") return;
+    cancelTimer(); mode = "oralCheck"; stage.replaceChildren(); title("🎤 Selbstkontrolle");
+    if (oralSource && oralSource.textContent.trim()) {
+      var oralAnswer = el("div", "learning-solution");
+      oralAnswer.innerHTML = oralSource.innerHTML;
+      stage.appendChild(oralAnswer);
+    } else {
+      para("Keine mündliche Musterantwort hinterlegt; vergleiche mit der gesamten Karte.");
+    }
+    addButton(stage,"Ganze Karte vergleichen",showEverything);
+    addButton(stage,"Zurück zum Lernen",restore);
+  }
+
+  // 🎯 WEAK SPOT: only marked ★ clozes are concealed again.
+  function weakReplay() {
+    if (mode !== "normal") restore();
+    if (!oneByOne) return notify("Weak Spot Replay benötigt One by one.");
+    var count = weak.filter(Boolean).length;
+    if (!count) return notify("Markiere zuerst aufgedeckte Clozes mit ☆.");
+    shown = shown.map(function (_,i) { return !weak[i]; });
+    history = clozes.map(function (_,i) { return weak[i] ? -1 : i; }).filter(function (i) { return i>=0; });
+    clearHint(); draw(); closeMenu(); notify("🎯 " + count + " markierte Cloze(s) erneut verdeckt.");
+  }
+
+  // Nur kartenbezogene, vollständig beantwortete Schritte anzeigen.
+  function sourceLines(source) {
+    if (!source) return [];
+    var html = source.innerHTML.replace(/<br\s*\/?\s*>/gi,"\n")
+      .replace(/<\/(?:p|li|div)>/gi,"\n");
+    var temp = el("div"); temp.innerHTML = html;
+    return (temp.textContent || "").replace(/\u00a0/g," ").split(/\n/)
+      .map(function (line) { return line.trim(); }).filter(Boolean);
+  }
+  var clinicalSteps = sourceLines(algorithmSource).map(function (line) {
+    var parts = line.split(/\s*\|\s*/);
+    return parts.length >= 3 && parts.slice(0,3).every(function (part) { return part.trim(); }) ? parts : null;
+  }).filter(Boolean);
+  var clinicalButton = menu.querySelector('[data-learn="algorithm"]');
+  if (clinicalButton && !clinicalSteps.length) {
+    clinicalButton.disabled = true;
+    clinicalButton.title = "Kein verwendbarer Algorithmus hinterlegt";
+  }
+  var clinicalIndex = 0, clinicalRound = 1;
+  function clinicalStart() {
+    if (!clinicalSteps.length) return;
+    clinicalIndex = 0; clinicalRound = 1; begin("algorithm"); hideContent(); clinicalShow();
+  }
+  function clinicalShow() {
+    if (mode !== "algorithm") return;
+    stage.replaceChildren(); var s = clinicalSteps[clinicalIndex];
+    title("🩺 Clinical Algorithm · Runde " + clinicalRound + " · " + (clinicalIndex+1) + "/" + clinicalSteps.length);
+    para(s[0] + ": " + s[1]);
+    var material = el("div","learning-solution"); material.hidden = true;
+    material.appendChild(el("div","",s[2]));
+    if (s[3]) material.appendChild(el("p","",s.slice(3).join(" | ")));
+    stage.appendChild(material);
+    addButton(stage,"Antwort aufdecken / verbergen",function () { material.hidden = !material.hidden; });
+    addButton(stage,clinicalIndex===clinicalSteps.length-1 ? "Neue Runde ↻" : "Nächster Schritt →",function () {
+      if (clinicalIndex < clinicalSteps.length-1) { clinicalIndex++; clinicalShow(); }
+      else { clinicalIndex=0; clinicalRound++; clinicalShow(); }
+    });
+    if (clinicalIndex>0) addButton(stage,"← Zurück",function () { clinicalIndex--; clinicalShow(); });
+    addButton(stage,"Abbrechen",restore);
+  }
+
+  // Prüfungsfeld als Folge konkreter Frage-Antwort-Paare lesen.
+  function extractQuestionAnswers() {
+    var segments = sourceLines(m3Source).join("\n").split(/\s*\|\s*|\s+—\s+|\n/);
+    var entries = [], question = "";
+    segments.forEach(function (segment) {
+      var value = segment.trim().replace(/^\d+\)\s*/,"");
+      var q = /^(?:Originalfrage|Frage|Folgefrage|Nachfrage|Prüfungsfrage):\s*(.+)$/i.exec(value);
+      if (q) { question = q[1].trim().replace(/^[„"«]|[“"»]$/g,""); return; }
+      var a = /^Antwort:\s*(.+)$/i.exec(value);
+      if (a && question) { entries.push({question:question,answer:a[1].trim()}); question = ""; }
+    });
+    return entries.filter(function (entry) { return entry.question && entry.answer; });
+  }
+  var oberarztQuestions = sourceLines(oberarztSource).map(function (line) {
+    var parts = line.split(/\s*\|\s*/);
+    return parts.length >= 3 && parts.slice(0,3).every(function (part) { return part.trim(); })
+      ? {chapter:parts[0].trim(),question:parts[1].trim(),answer:parts.slice(2).join(" | ").trim()} : null;
+  }).filter(Boolean);
+  if (!oberarztQuestions.length) oberarztQuestions = extractQuestionAnswers().map(function (q) {
+    return {chapter:"Prüfungsfragen",question:q.question,answer:q.answer};
+  });
+  var oberarztButton = menu.querySelector('[data-learn="oberarzt"]');
+  if (oberarztButton && !oberarztQuestions.length) {
+    oberarztButton.disabled = true;
+    oberarztButton.title = "Keine beantwortete Prüfungsfrage hinterlegt";
+  }
+  var m3Questions = [], m3Position = 0, m3Round = 1;
+  function shuffleQuestions(previous) {
+    var result = oberarztQuestions.slice();
+    for (var i=result.length-1;i>0;i--) {
+      var j=Math.floor(Math.random()*(i+1)), tmp=result[i]; result[i]=result[j]; result[j]=tmp;
+    }
+    if (result.length>1 && previous && result[0].question===previous.question) {
+      var first=result.shift(); result.push(first);
+    }
+    return result;
+  }
+  function oberarztStart() {
+    var qs = oberarztQuestions;
+    begin("oberarzt"); hideContent();
+    if (!qs.length) {
+      title("👨‍⚕️ Keine beantwortete Prüfungsfrage auf dieser Karte");
+      addButton(stage,"Schließen",restore); return;
+    }
+    m3Questions = shuffleQuestions(null); m3Position = 0; m3Round = 1; oberarztShow();
+  }
+  function oberarztShow() {
+    if (mode!=="oberarzt") return;
+    stage.replaceChildren();
+    title("👨‍⚕️ Oberarzt-Hakensprung · " + m3Questions[m3Position].chapter + " · Runde " + m3Round + " · " + (m3Position+1) + "/" + m3Questions.length);
+    para(m3Questions[m3Position].question);
+    para("Antworte erst frei und decke dann die Musterantwort auf.");
+    addButton(stage,m3Position===m3Questions.length-1 ? "Neue Fragerunde ↻" : "Nächste Frage →",function () {
+      if (m3Position<m3Questions.length-1) m3Position++;
+      else { m3Questions=shuffleQuestions(m3Questions[m3Position]); m3Position=0; m3Round++; }
+      oberarztShow();
+    });
+    if (m3Position>0) addButton(stage,"← Vorherige Frage",function () { m3Position--; oberarztShow(); });
+    var answerArea = el("div","learning-solution",m3Questions[m3Position].answer); answerArea.hidden = true;
+    stage.appendChild(answerArea);
+    addButton(stage,"Antwort aufdecken / verbergen",function () { answerArea.hidden = !answerArea.hidden; });
+    addButton(stage,"Ganze Karte vergleichen",showEverything);
+    addButton(stage,"Beenden",restore);
+  }
+
+  menu.addEventListener("click",function (e) {
+    var b=e.target.closest("button[data-learn]"); if (!b || b.disabled || !menu.contains(b)) return;
+    e.preventDefault(); e.stopPropagation();
+    var type=b.getAttribute("data-learn");
+    if(type==="hint") window.showSmartHint();
+    if(type==="blind") blindStart();
+    if(type==="random") randomToggle();
+    if(type==="oral") oralStart();
+    if(type==="weak") weakReplay();
+    if(type==="algorithm") clinicalStart();
+    if(type==="oberarzt") oberarztStart();
+  });
+
+  // Touch zoom for the symptom images.
+  card.querySelectorAll(".symptom-field img").forEach(function (img) {
+    img.addEventListener("click",function (e) { e.stopPropagation(); img.classList.toggle("image-zoomed"); });
+  });
+
+  // Desktop keyboard controls. AnkiMobile uses User Actions below, NOT key simulation.
+  function shortcuts(e) {
+    if(e.defaultPrevented||e.repeat||e.ctrlKey||e.metaKey||e.altKey) return;
+    if(e.target && (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)||e.target.isContentEditable)) return;
+    var key=(e.key||"").toLowerCase(); var done=false;
+    if(key==="n") done=window.revealNextCloze();
+    else if(key==="x") done=window.showNextExtraPanel();
+    else if(key===",") done=window.revealAllClozes();
+    else if(key==="c") done=window.resetClozes();
+    else if(key==="v") done=window.hidePreviousCloze();
+    else if(key==="h") done=window.showSmartHint();
+    if(done){ e.preventDefault(); e.stopImmediatePropagation(); }
+  }
+  document.addEventListener("keydown",shortcuts,true);
+  window.__obsidianCleanup=function(){ cancelTimer(); document.removeEventListener("keydown",shortcuts,true); };
+  draw(); syncPanels();
+  card.style.visibility="visible";
+})();
+</script>
+
+<!-- User Actions direkt auf DOM-Buttons, wie dein funktionierender iPad-Test. -->
+<script>
+function userJs1() { var b=document.getElementById("next-point-button"); if(b && !b.disabled) b.click(); }
+function userJs2() { var b=document.getElementById("ua2"); if(b) b.click(); }
+function userJs3() { var b=document.getElementById("ua3"); if(b) b.click(); }
+function userJs4() { var b=document.getElementById("ua4"); if(b) b.click(); }
+function userJs5() { var b=document.getElementById("ua5"); if(b) b.click(); }
+function userJs6() { var b=document.getElementById("ua6"); if(b) b.click(); }
+function userJs7() { var b=document.getElementById("ua7"); if(b) b.click(); }
+function userJs8() { var b=document.getElementById("ua8"); if(b) b.click(); }
+</script>

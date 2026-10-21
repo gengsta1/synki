@@ -65,6 +65,18 @@ export class SynkiConnectClient {
 		return requiredFields.filter((field) => !available.has(field))
 	}
 
+	public async ensureModelFields(modelName: string, requiredFields: readonly string[]): Promise<string[]> {
+		const existing = new Set(await this.invoke<string[]>('modelFieldNames', { modelName }))
+		const added: string[] = []
+		for (const fieldName of requiredFields) {
+			if (existing.has(fieldName)) continue
+			await this.invoke('modelFieldAdd', { fieldName, modelName })
+			existing.add(fieldName)
+			added.push(fieldName)
+		}
+		return added
+	}
+
 	public async noteExists(noteId: string): Promise<boolean> {
 		const notes = await this.invoke<Array<{ noteId: number }>>('notesInfo', {
 			notes: [Number(noteId)],

@@ -1,0 +1,71 @@
+<div id="obsidian-card" class="card-shell" style="visibility:hidden;">
+  {{#Thema}}<div class="topic-label">{{Thema}}</div>{{/Thema}}
+  <div id="text" class="main-text">{{cloze:Text}}</div>
+</div>
+
+<script>
+(function () {
+  function renderRichMarkdown(root) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    nodes.forEach(function (node) {
+      const value = node.nodeValue || "";
+      if (!/[*_\[]/.test(value)) return;
+      const fragment = document.createDocumentFragment();
+      value.split(/(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g).forEach(function (part) {
+        if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+          const strong = document.createElement("strong");
+          strong.textContent = part.slice(2, -2);
+          fragment.appendChild(strong);
+        } else if (part.startsWith("__") && part.endsWith("__") && part.length > 4) {
+          const underline = document.createElement("u");
+          underline.textContent = part.slice(2, -2);
+          fragment.appendChild(underline);
+        } else if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
+          const emphasis = document.createElement("em");
+          emphasis.textContent = part.slice(1, -1);
+          fragment.appendChild(emphasis);
+        } else if (/^\[[^\]]+\]\(https?:\/\/[^\s)]+\)$/.test(part)) {
+          const link = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/.exec(part);
+          const anchor = document.createElement("a");
+          anchor.textContent = link[1];
+          anchor.href = link[2];
+          fragment.appendChild(anchor);
+        } else if (part) {
+          fragment.appendChild(document.createTextNode(part));
+        }
+      });
+      node.parentNode.replaceChild(fragment, node);
+    });
+  }
+
+  const card = document.getElementById("obsidian-card");
+  const text = document.getElementById("text");
+  const setting = `{{text:One by one}}`.trim().toLowerCase();
+  const enabledValues = ["true", "on", "1", "ja"];
+
+  if (text) renderRichMarkdown(text);
+
+  const shouldUseOneByOne = Boolean(text) && enabledValues.includes(setting) &&
+    text.querySelectorAll(".cloze").length >= 2;
+
+  if (!shouldUseOneByOne) {
+    if (card) card.style.visibility = "visible";
+    return;
+  }
+
+  // Anki zeigt die Rückseite sofort. Dort werden die bereits gelösten Clozes
+  // wieder einzeln verdeckt und mit N freigegeben.
+  setTimeout(function () {
+    if (window.pycmd) {
+      window.pycmd("ans");
+    } else if (window.showAnswer) {
+      window.showAnswer();
+    } else if (card) {
+      card.style.visibility = "visible";
+    }
+  }, 30);
+})();
+</script>

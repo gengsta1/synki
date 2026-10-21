@@ -14,6 +14,14 @@ import type SynkiPlugin from '../main'
 import { FolderSuggest } from '../extensions/folder-suggest'
 import { SynkiConnectClient } from '../synki-anki-connect'
 import {
+	MEDICAL_BACK_TEMPLATE,
+	MEDICAL_FRONT_TEMPLATE,
+	MEDICAL_STYLING,
+	MEDICAL_TEMPLATE_FIELDS,
+	usesMedicalTemplate,
+} from '../synki-medical-template'
+import { CLOZE_OBSIDIAN_FIELDS } from '../synki-parser'
+import {
 	buildSynkiBackTemplate,
 	SYNKI_FRONT_TEMPLATE,
 	SYNKI_STYLING,
@@ -65,19 +73,7 @@ const RECOMMENDED_ANKI_ADDONS = [
 	},
 ]
 
-const MEDICAL_CLINICAL_FIELDS = [
-	'Text',
-	'Back Extra',
-	'Definitionen',
-	'Mechanismus',
-	'Klinik',
-	'Dosis',
-	'Cave',
-	'Merksprüche',
-	'Eigene Prüfungsfragen',
-	'Symptombild',
-	'One by one',
-]
+const MEDICAL_CLINICAL_FIELDS = CLOZE_OBSIDIAN_FIELDS
 
 const INTERNATIONAL_AFFAIRS_MASTER_FIELDS = [
 	'Text',
@@ -191,6 +187,8 @@ export function getSynkiPluginDefaultSettings(app: App): SynkiPluginSettings {
 			defaultModelName: 'Cloze_obsidian',
 			fieldAliases: [
 				'Text=Text',
+				'Topic=Thema',
+				'Hint=Hint',
 				'Back Extra=Back Extra',
 				'Definitions=Definitionen',
 				'Definition=Definitionen',
@@ -208,21 +206,12 @@ export function getSynkiPluginDefaultSettings(app: App): SynkiPluginSettings {
 				'Mnemonics=Merksprüche',
 				'Medical Questions=Eigene Prüfungsfragen',
 				'Symptom image=Symptombild',
+				'Oral presentation=Mündliche Präsentation',
+				'Clinical algorithm=Klinischer Algorithmus',
+				'Oberarzt mode=Oberarzt-Modus',
 				'One by one=One by one',
 			].join('\n'),
-			fields: [
-				'Text',
-				'Back Extra',
-				'Definitionen',
-				'Mechanismus',
-				'Klinik',
-				'Dosis',
-				'Cave',
-				'Merksprüche',
-				'Eigene Prüfungsfragen',
-				'Symptombild',
-				'One by one',
-			].join('\n'),
+			fields: fieldsToSettingValue(MEDICAL_CLINICAL_FIELDS),
 			folders: ['6 - Main Notes'],
 			modelAliases: ['Cloze=Cloze_obsidian'].join('\n'),
 			textFieldName: 'Text',
@@ -424,7 +413,7 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 				},
 			},
 			{
-				desc: 'Downloads the newest tested build from the GitHub main branch. Restart Obsidian once afterwards; deleting or reinstalling the plugin is not necessary.',
+				desc: 'Downloads the latest tested main release build from GitHub. Restart Obsidian once afterwards; deleting or reinstalling the plugin is not necessary.',
 				name: 'Update Synki from GitHub',
 				render: (setting) => {
 					setting.addButton((button) => {
@@ -657,10 +646,9 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 			},
 			{
 				desc: sanitizeHTMLToDom(
-					html`Updates the configured Anki note type with the built-in card template. This sets
-						the front, back, and styling for one-by-one clozes, <kbd>N</kbd> reveal, and
-						<kbd>X</kbd> extra-field cycling. Extra buttons are generated from the configured
-						fields above, so the note type does not need the original medical fields.`,
+					html`Updates the configured Anki note type. Medical fields install the current
+						front, back, and styling with the learning modes; missing medical fields are added
+						to the note type. Other profiles keep the configurable template.`,
 				),
 				name: 'Install Anki card template',
 				render: (setting) => {
@@ -1374,17 +1362,27 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 				.split('\n')
 				.map((field) => field.trim())
 				.filter((field) => field.length > 0)
+			const medical = usesMedicalTemplate(this.plugin.settings.synki.profile, fields)
+			let addedFields: string[] = []
+			if (medical) {
+				addedFields = await client.ensureModelFields(modelName, MEDICAL_TEMPLATE_FIELDS)
+				const missingConfigured = MEDICAL_TEMPLATE_FIELDS.filter((field) => !fields.includes(field))
+				if (missingConfigured.length > 0) {
+					this.plugin.settings.synki.fields = [...fields, ...missingConfigured].join('\n')
+					await this.plugin.saveSettings()
+				}
+			}
 			await client.updateModelTemplate({
-				back: buildSynkiBackTemplate(fields),
-				css: SYNKI_STYLING,
-				front: SYNKI_FRONT_TEMPLATE,
+				back: medical ? MEDICAL_BACK_TEMPLATE : buildSynkiBackTemplate(fields),
+				css: medical ? MEDICAL_STYLING : SYNKI_STYLING,
+				front: medical ? MEDICAL_FRONT_TEMPLATE : SYNKI_FRONT_TEMPLATE,
 				modelName,
 				templateName: SYNKI_TEMPLATE_NAME,
 			})
 			new Notice(
 				sanitizeHTMLToDom(
 					html`<strong>Synki:</strong><br />Updated Anki template for
-						<code>${modelName}</code>.`,
+						<code>${modelName}</code>${addedFields.length > 0 ? `; added fields: ${addedFields.join(', ')}` : ''}.`,
 				),
 			)
 		} catch (error) {

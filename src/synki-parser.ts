@@ -38,6 +38,8 @@ const TARGET_DECK_RE = /^TARGET DECK:\s*(.+?)\s*$/imu
 
 export const CLOZE_OBSIDIAN_FIELDS = [
 	'Text',
+	'Thema',
+	'Hint',
 	'Back Extra',
 	'Definitionen',
 	'Mechanismus',
@@ -47,6 +49,9 @@ export const CLOZE_OBSIDIAN_FIELDS = [
 	'Merksprüche',
 	'Eigene Prüfungsfragen',
 	'Symptombild',
+	'Mündliche Präsentation',
+	'Klinischer Algorithmus',
+	'Oberarzt-Modus',
 	'One by one',
 ]
 
@@ -54,6 +59,16 @@ export const DEFAULT_SYNKI_PARSER_OPTIONS: SynkiParserOptions = {
 	defaultModelName: 'Cloze_obsidian',
 	fieldAliases: {
 		'back extra': 'Back Extra',
+		'clinical algorithm': 'Klinischer Algorithmus',
+		'klinischer algorithmus': 'Klinischer Algorithmus',
+		'oral presentation': 'Mündliche Präsentation',
+		'mündliche präsentation': 'Mündliche Präsentation',
+		'oberarzt-modus': 'Oberarzt-Modus',
+		'oberarzt modus': 'Oberarzt-Modus',
+		'oberarzt mode': 'Oberarzt-Modus',
+		thema: 'Thema',
+		topic: 'Thema',
+		hint: 'Hint',
 		clinic: 'Klinik',
 		actors: 'Akteure',
 		akteure: 'Akteure',
@@ -94,6 +109,16 @@ export const DEFAULT_SYNKI_PARSER_OPTIONS: SynkiParserOptions = {
 
 export const FIELD_ALIASES: Record<string, string> = {
 	'back extra': 'Back Extra',
+	'clinical algorithm': 'Klinischer Algorithmus',
+	'klinischer algorithmus': 'Klinischer Algorithmus',
+	'oral presentation': 'Mündliche Präsentation',
+	'mündliche präsentation': 'Mündliche Präsentation',
+	'oberarzt-modus': 'Oberarzt-Modus',
+	'oberarzt modus': 'Oberarzt-Modus',
+	'oberarzt mode': 'Oberarzt-Modus',
+	thema: 'Thema',
+	topic: 'Thema',
+	hint: 'Hint',
 	actors: 'Akteure',
 	akteure: 'Akteure',
 	clinic: 'Klinik',
