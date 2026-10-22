@@ -24,7 +24,7 @@ Most Obsidian-to-Anki workflows treat a whole note, heading, folder, or special 
 That means one large Obsidian master note can contain:
 
 - normal study text above `## Anki`
-- one explicit `TARGET DECK`
+- one explicit parent `TARGET DECK` and optional `SUBDECK` per card block
 - shared `FILE TAGS`
 - many individual Anki cards
 - stable Anki note IDs written back after each card block
@@ -32,7 +32,7 @@ That means one large Obsidian master note can contain:
 The important differences:
 
 - **Embedded cards, not one file per card.** A long Obsidian note can hold many Anki cards at the bottom.
-- **Decks come from `TARGET DECK`.** The new sync command does not derive the deck from the Obsidian folder path.
+- **Decks come from `TARGET DECK` and optional `SUBDECK`.** Each card can go to a different nested deck within the parent; the block-sync command does not derive decks from the Obsidian folder path.
 - **Tags are merged.** `FILE TAGS` are combined with each card's own `Tags` field.
 - **Stable updates.** New cards get `<!--ANKI-NOTE-ID: ...-->` after `END`, so later syncs update the same Anki note instead of creating duplicates.
 - **Profiles plus custom note types.** `Medical clinical` is the default profile and includes `Thema`, `Hint`, `Mündliche Präsentation`, `Klinischer Algorithmus`, `Oberarzt-Modus`, and `Symptombild`; `International Affairs Master` restores the previous general field set; `Custom` exposes the note type, fields, aliases, and source folders for any own setup.
@@ -59,6 +59,7 @@ FILE TAGS: study example
 
 START
 Cloze
+SUBDECK: Gesamtüberblick
 Text: A card can contain {{c1::cloze deletions::hint}} and **bold text**.
 Back Extra: ...
 Definitionen:
@@ -76,7 +77,9 @@ END
 Run `Synki: Sync this note` for the active note, or `Synki: Sync all block folders to Anki` for all configured block-sync folders.
 New cards get a stable `<!--ANKI-NOTE-ID: ...-->` comment after `END`, so later syncs update the same Anki note instead of creating duplicates.
 
-The original Yanki folder-sync command is still present for reference, but the new block workflow uses `TARGET DECK` directly instead of deriving decks from folders.
+`SUBDECK:` is optional and belongs **inside** a `START`/`END` block. For the example above, the destination is `Study::Topic::Example::Gesamtüberblick`. Nested values such as `SUBDECK: Ursachen::Biliär` work too. Without this line, cards keep the old behavior and use `TARGET DECK`. An empty `SUBDECK:` explicitly selects the parent deck. On a later sync, changing this line moves all cards of the existing Anki note to the new deck without recreating the note. `SUBDECK` is routing metadata, not an Anki field.
+
+The original Yanki folder-sync command is still present for reference, but the block workflow uses `TARGET DECK` and optional per-card `SUBDECK` instead of deriving decks from folders.
 
 The block sync sends every named field in a card, including populated learning-mode fields, even if an existing vault still has the older saved medical field list. The **Install / update template** button installs the current medical Front, Back, and Style when the Medical clinical profile (or a matching custom medical field set) is selected. It adds any missing medical fields to the Anki note type and saved field configuration first. International Affairs and other custom field sets retain the configurable template.
 

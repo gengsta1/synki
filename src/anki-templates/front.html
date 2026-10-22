@@ -1,5 +1,12 @@
 <div id="obsidian-card" class="card-shell" style="visibility:hidden;">
-  {{#Thema}}<div class="topic-label">{{Thema}}</div>{{/Thema}}
+  <div class="card-context">
+    {{#Thema}}<span class="context-chip topic-label" id="topic-label">{{Thema}}</span>{{/Thema}}
+    <span class="context-chip priority-chip" id="priority-chip" hidden></span>
+    <span class="context-chip exam-chip" id="exam-chip" hidden></span>
+  </div>
+  {{#Oberarzt-Modus}}<div id="exam-meta" hidden>{{Oberarzt-Modus}}</div>{{/Oberarzt-Modus}}
+  {{#Eigene Prüfungsfragen}}<div id="legacy-exam-meta" hidden>{{Eigene Prüfungsfragen}}</div>{{/Eigene Prüfungsfragen}}
+  <div id="priority-meta" hidden>{{Tags}}</div>
   <div id="text" class="main-text">{{cloze:Text}}</div>
 </div>
 
@@ -47,6 +54,43 @@
   const enabledValues = ["true", "on", "1", "ja"];
 
   if (text) renderRichMarkdown(text);
+
+  function sourceLines(id) {
+    const source = document.getElementById(id);
+    if (!source) return [];
+    const html = source.innerHTML.replace(/<br\s*\/?\s*>/gi, "\n").replace(/<\/(?:p|li|div)>/gi, "\n");
+    const temp = document.createElement("div"); temp.innerHTML = html;
+    return (temp.textContent || "").split(/\n/).map(s => s.trim()).filter(Boolean);
+  }
+  const examLines = sourceLines("exam-meta");
+  const examCount = examLines.filter(s => s.split(/\s*\|\s*/).length >= 3).length ||
+    (sourceLines("legacy-exam-meta").join(" ").match(/Antwort:/gi) || []).length;
+  if (examCount) {
+    const examChip = document.getElementById("exam-chip");
+    examChip.textContent = examCount + (examCount === 1 ? " Frage" : " Fragen");
+    examChip.classList.add("available");
+    examChip.hidden = false;
+  }
+  const topicLabel = document.getElementById("topic-label");
+  const priorityText = (document.getElementById("priority-meta")?.textContent || "").toLowerCase();
+  const priorityChip = document.getElementById("priority-chip");
+  if (priorityChip && /(?:^|\s)high_yield(?:\s|$)/.test(priorityText)) {
+    priorityChip.textContent = "High yield";
+    priorityChip.classList.add("high-yield");
+    priorityChip.hidden = false;
+  } else if (priorityChip && /(?:^|\s)low_yield(?:\s|$)/.test(priorityText)) {
+    priorityChip.textContent = "Low yield";
+    priorityChip.classList.add("low-yield");
+    priorityChip.hidden = false;
+  }
+  if (topicLabel && topicLabel.textContent.includes(" › ")) {
+    const [main, ...parts] = topicLabel.textContent.split(" › ");
+    topicLabel.textContent = main;
+    const area = document.createElement("span");
+    area.className = "context-chip area-chip";
+    area.textContent = parts.join(" › ");
+    topicLabel.insertAdjacentElement("afterend", area);
+  }
 
   const shouldUseOneByOne = Boolean(text) && enabledValues.includes(setting) &&
     text.querySelectorAll(".cloze").length >= 2;

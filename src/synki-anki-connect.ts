@@ -123,6 +123,23 @@ export class SynkiConnectClient {
 		})
 	}
 
+	public async moveNoteToDeck(noteId: string, deckName: string): Promise<void> {
+		const notes = await this.invoke<Array<{ cards: number[]; noteId: number }>>('notesInfo', {
+			notes: [Number(noteId)],
+		})
+		const note = notes.find((item) => String(item.noteId) === noteId)
+		if (note === undefined || note.cards.length === 0) {
+			throw new Error(`Anki note '${noteId}' has no cards to move.`)
+		}
+
+		const currentDecks = await this.invoke<Record<string, number[]>>('getDecks', {
+			cards: note.cards,
+		})
+		if ((currentDecks[deckName]?.length ?? 0) === note.cards.length) return
+
+		await this.invoke('changeDeck', { cards: note.cards, deck: deckName })
+	}
+
 	private async invoke<T = unknown>(action: string, params: Record<string, unknown> = {}): Promise<T> {
 		const response = await requestUrl({
 			body: JSON.stringify({

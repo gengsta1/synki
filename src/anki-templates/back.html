@@ -1,12 +1,11 @@
 
-<!--
-OBSIDIAN / SYNKI – KOMPLETTES BACK TEMPLATE
-Ersetzt den gesamten bisherigen Back-Template-Inhalt.
-FRONT TEMPLATE und vorhandenes STYLING bleiben unverändert.
-Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
--->
 <div id="obsidian-card" class="card-shell" style="visibility:hidden;">
-  {{#Thema}}<div class="topic-label">{{Thema}}</div>{{/Thema}}
+  <div class="card-context">
+    {{#Thema}}<span class="context-chip topic-label" id="topic-label">{{Thema}}</span>{{/Thema}}
+    <span class="context-chip priority-chip" id="priority-chip" hidden></span>
+    <span class="context-chip exam-chip" id="exam-chip" hidden></span>
+  </div>
+  <div id="priority-meta" hidden>{{Tags}}</div>
 
   <!-- 1. KARTENFRAGE (IMMER OBEN) -->
   <div id="text" class="main-text">{{cloze:Text}}</div>
@@ -28,33 +27,7 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
     <span id="onebyone-progress" class="onebyone-progress"></span>
   </div>
 
-  <!-- 3. LERNMODI UNTER DEN FRAGEN -->
-  <div id="learning-bar" class="learning-bar">
-    <button type="button" id="learning-menu-button" class="learning-main-button"
-      aria-expanded="false" aria-controls="learning-menu">⋯ Lernmodi</button>
-    <div id="learning-menu" class="learning-menu" hidden>
-      {{#Hint}}<button type="button" data-learn="hint" id="smart-hint-button">💡 Hint</button>{{/Hint}}
-      {{^Hint}}<button type="button" class="learning-unavailable" disabled title="Kein Hint hinterlegt">💡 Hint</button>{{/Hint}}
-      <button type="button" data-learn="blind">🧠 Blind Recall</button>
-      <button type="button" data-learn="random" id="random-mode-button" aria-pressed="false">🎲 Random Cloze</button>
-      {{#Mündliche Präsentation}}<button type="button" data-learn="oral">🎤 Oral Exam</button>{{/Mündliche Präsentation}}
-      {{^Mündliche Präsentation}}<button type="button" class="learning-unavailable" disabled title="Keine mündliche Präsentation hinterlegt">🎤 Oral Exam</button>{{/Mündliche Präsentation}}
-      <button type="button" data-learn="weak">🎯 Weak Spot Replay</button>
-      {{#Klinischer Algorithmus}}<button type="button" data-learn="algorithm">🩺 Clinical Algorithm</button>{{/Klinischer Algorithmus}}
-      {{^Klinischer Algorithmus}}<button type="button" class="learning-unavailable" disabled title="Kein klinischer Algorithmus hinterlegt">🩺 Clinical Algorithm</button>{{/Klinischer Algorithmus}}
-      {{#Oberarzt-Modus}}<button type="button" data-learn="oberarzt">👨‍⚕️ Oberarzt-Hakensprung</button>{{/Oberarzt-Modus}}
-      {{^Oberarzt-Modus}}<button type="button" class="learning-unavailable" disabled title="Kein Oberarzt-Modus hinterlegt">👨‍⚕️ Oberarzt-Hakensprung</button>{{/Oberarzt-Modus}}
-    </div>
-    {{#Hint}}<div id="hint-source" hidden>{{Hint}}</div>{{/Hint}}
-    {{#Mündliche Präsentation}}<div id="oral-source" hidden>{{Mündliche Präsentation}}</div>{{/Mündliche Präsentation}}
-    {{#Klinischer Algorithmus}}<div id="algorithm-source" hidden>{{Klinischer Algorithmus}}</div>{{/Klinischer Algorithmus}}
-    {{#Oberarzt-Modus}}<div id="oberarzt-source" hidden>{{Oberarzt-Modus}}</div>{{/Oberarzt-Modus}}
-    <div id="hint-result" class="learning-hint-result" aria-live="polite"></div>
-    <div id="learning-status" class="learning-status" aria-live="polite"></div>
-  </div>
-  <section id="learning-stage" class="learning-stage" hidden></section>
-
-  <!-- 4. ZUSATZFELDER – WIE BISHER -->
+  <!-- 3. ZUSATZFELDER -->
   <div id="after-answer">
     {{#Back Extra}}
     <div id="obsidian-back-extra" class="back-extra">{{Back Extra}}</div>
@@ -97,12 +70,7 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
         <div class="field-content">{{Merksprüche}}</div>
       </div>
       {{/Merksprüche}}
-      {{#Eigene Prüfungsfragen}}
-      <div id="field-extra-7" class="extra-field question-field">
-        <div class="field-title">Eigene Prüfungsfragen</div>
-        <div class="field-content">{{Eigene Prüfungsfragen}}</div>
-      </div>
-      {{/Eigene Prüfungsfragen}}
+      {{#Eigene Prüfungsfragen}}<div id="legacy-exam-source" hidden>{{Eigene Prüfungsfragen}}</div>{{/Eigene Prüfungsfragen}}
       {{#Symptombild}}
       <div id="field-extra-8" class="extra-field symptom-field">
         <div class="field-title">Symptombild</div>
@@ -130,9 +98,6 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
       {{#Merksprüche}}
       <button type="button" class="field-button mnemonic-button" data-panel="field-extra-6" onclick="toggleField('field-extra-6'); event.stopPropagation();">Merksprüche</button>
       {{/Merksprüche}}
-      {{#Eigene Prüfungsfragen}}
-      <button type="button" class="field-button question-button" data-panel="field-extra-7" onclick="toggleField('field-extra-7'); event.stopPropagation();">Eigene Prüfungsfragen</button>
-      {{/Eigene Prüfungsfragen}}
       {{#Symptombild}}
       <button type="button" class="field-button symptom-button" data-panel="field-extra-8" onclick="toggleField('field-extra-8'); event.stopPropagation();">Symptombild</button>
       {{/Symptombild}}
@@ -140,6 +105,24 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
 
     {{#Tags}}<div class="tags">{{Tags}}</div>{{/Tags}}
   </div>
+
+  <!-- 4. LERNMODI NACH DEN ZUSATZFELDERN -->
+  <div id="learning-bar" class="learning-bar">
+    <button type="button" id="learning-menu-button" class="reveal-button"
+      aria-expanded="false" aria-controls="learning-menu">+ Lernmodi</button>
+    <div id="learning-menu" class="learning-menu" hidden>
+      <button type="button" class="reveal-button" data-learn="blind">Blind Recall</button>
+      <button type="button" class="reveal-button" data-learn="random" id="random-mode-button" aria-pressed="false">Random Cloze</button>
+      <button type="button" class="reveal-button" data-learn="weak">Weak Spot Replay</button>
+      {{#Klinischer Algorithmus}}<button type="button" class="reveal-button" data-learn="algorithm">Klinischer Algorithmus <span class="shortcut">K</span></button>{{/Klinischer Algorithmus}}
+      {{^Klinischer Algorithmus}}<button type="button" class="reveal-button" disabled title="Kein klinischer Algorithmus hinterlegt">Klinischer Algorithmus <span class="shortcut">K</span></button>{{/Klinischer Algorithmus}}
+      <button type="button" class="reveal-button" data-learn="oberarzt">Prüfungssimulation <span class="shortcut">P</span></button>
+    </div>
+    {{#Klinischer Algorithmus}}<div id="algorithm-source" hidden>{{Klinischer Algorithmus}}</div>{{/Klinischer Algorithmus}}
+    {{#Oberarzt-Modus}}<div id="oberarzt-source" hidden>{{Oberarzt-Modus}}</div>{{/Oberarzt-Modus}}
+    <div id="learning-status" class="learning-status" aria-live="polite"></div>
+  </div>
+  <section id="learning-stage" class="learning-stage" hidden></section>
 
   <!-- AnkiMobile: unsichtbare Auslöser für die bewährte .click()-Methode -->
   <div id="ankimobile-actions" hidden>
@@ -153,30 +136,6 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
   </div>
 </div>
 
-<!-- Nur das neue Lernmenü stylen; dein vorhandenes Styling bleibt erhalten. -->
-<style>
-#obsidian-card .learning-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 18px}
-#obsidian-card .learning-main-button,#obsidian-card .learning-menu button,
-#obsidian-card .learning-stage button{font:inherit;color:var(--text,#ececef);background:#444447;border:1px solid #202023;border-radius:999px;padding:8px 15px;min-height:40px;font-size:17px;font-weight:650;cursor:pointer;touch-action:manipulation;box-shadow:0 2px 2px #0005}
-#obsidian-card #learning-menu-button[aria-expanded="true"],#obsidian-card .learning-menu button[aria-pressed="true"]{border-color:var(--cloze,#68c58b);background:rgba(104,197,139,.13)}
-#obsidian-card .learning-menu{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-#obsidian-card .learning-menu button{text-align:left;font-size:17px}
-#obsidian-card .learning-menu button:disabled{opacity:.38;color:var(--muted,#afafb4);background:#38383b;border-color:#424247;box-shadow:none;cursor:not-allowed;filter:none}
-#obsidian-card .learning-hint-result{width:100%;font-size:14px;color:var(--cloze,#68c58b);overflow-wrap:anywhere}
-#obsidian-card .learning-status{width:100%;font-size:12px;opacity:.75}
-#obsidian-card .learning-stage{background:var(--extra-bg,rgba(120,120,120,.08));border:1px solid var(--border,#666);border-radius:9px;padding:14px;margin:8px 0 18px;line-height:1.55;overflow-wrap:anywhere}
-#obsidian-card .learning-stage h4{font-size:18px;margin:0 0 10px}
-#obsidian-card .learning-stage p{margin:8px 0}
-#obsidian-card .learning-stage button{margin:7px 7px 3px 0}
-#obsidian-card .learning-stage .learning-timer{font-size:28px;color:var(--cloze,#68c58b);font-weight:750;margin:10px 0}
-#obsidian-card .learning-solution{margin:9px 0;padding:10px;background:var(--extra-bg,rgba(120,120,120,.08));border-left:3px solid var(--cloze,#68c58b)}
-#obsidian-card .learning-weak-star{font-size:19px;line-height:1.1;background:transparent;border:0;color:#e7b34d;padding:2px 4px;margin:0 2px;cursor:pointer;vertical-align:baseline;touch-action:manipulation}
-#obsidian-card .learning-weak-star[aria-pressed="true"]{color:#ef878d}
-#obsidian-card .learning-menu[hidden],#obsidian-card .learning-stage[hidden],#obsidian-card .learning-weak-star[hidden],#obsidian-card #ankimobile-actions[hidden]{display:none!important}
-#obsidian-card .learning-stage ol{margin:7px 0;padding-left:24px}
-#obsidian-card .learning-stage input[type="checkbox"]{margin-right:8px;accent-color:var(--cloze,#68c58b)}
-@media(max-width:600px){#obsidian-card .learning-main-button,#obsidian-card .learning-menu button,#obsidian-card .learning-stage button{font-size:16px;padding:9px 13px}#obsidian-card .learning-stage{padding:12px}}
-</style>
 
 <script>
 (function () {
@@ -194,15 +153,12 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
   var progress = card.querySelector("#onebyone-progress");
   var menu = card.querySelector("#learning-menu");
   var menuButton = card.querySelector("#learning-menu-button");
-  var hintSource = card.querySelector("#hint-source");
-  var oralSource = card.querySelector("#oral-source");
   var algorithmSource = card.querySelector("#algorithm-source");
   var oberarztSource = card.querySelector("#oberarzt-source");
-  var hintResult = card.querySelector("#hint-result");
   var stage = card.querySelector("#learning-stage");
   var status = card.querySelector("#learning-status");
   var randomButton = card.querySelector("#random-mode-button");
-  var m3Source = card.querySelector("#field-extra-7 .field-content");
+  var m3Source = card.querySelector("#legacy-exam-source");
   if (!text) return;
 
   function el(tag, cls, content) {
@@ -211,9 +167,10 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
     if (content !== undefined) x.textContent = content;
     return x;
   }
-  function addButton(parent, label, fn) {
-    var b = el("button", "", label);
+  function addButton(parent, label, fn, shortcut) {
+    var b = el("button", "reveal-button", label);
     b.type = "button";
+    if (shortcut) b.appendChild(el("span", "shortcut", shortcut));
     b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); fn(); });
     parent.appendChild(b);
     return b;
@@ -248,7 +205,7 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
     });
   }
   refreshMarkdown(text);
-  card.querySelectorAll(".back-extra,.field-content,#hint-source,#oral-source").forEach(refreshMarkdown);
+  card.querySelectorAll(".back-extra,.field-content").forEach(refreshMarkdown);
 
   var clozes = Array.from(text.querySelectorAll(".cloze"));
   var val = `{{text:One by one}}`.trim().toLowerCase();
@@ -262,13 +219,11 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
   var mode = "normal";
   var snapshot = null;
   var activeTimer = null;
-  var hintVisible = false;
 
   function getPanels() { return Array.from(card.querySelectorAll(".extra-field")); }
   function completed() { return shown.every(Boolean); }
   function hidden() { return shown.map(function (v,i) { return v ? -1 : i; }).filter(function (i) { return i >= 0; }); }
   function cancelTimer() { if (activeTimer !== null) clearInterval(activeTimer); activeTimer = null; }
-  function clearHint() { hintVisible = false; hintResult.textContent = ""; }
   function syncPanels() {
     var buttons = Array.from(card.querySelectorAll(".field-button[data-panel]"));
     buttons.forEach(function (b) {
@@ -316,7 +271,7 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
     if (!oneByOne || mode !== "normal") return false;
     var candidates = hidden(); if (!candidates.length) return false;
     var i = random ? candidates[Math.floor(Math.random()*candidates.length)] : candidates[0];
-    shown[i] = true; history.push(i); clearHint(); draw(); return true;
+    shown[i] = true; history.push(i); draw(); return true;
   };
   window.hidePreviousCloze = function () {
     if (!oneByOne || mode !== "normal") return false;
@@ -324,16 +279,16 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
     while (history.length && i < 0) { var j = history.pop(); if (shown[j]) i = j; }
     if (i < 0) i = shown.lastIndexOf(true);
     if (i < 0) return false;
-    shown[i] = false; clearHint(); draw(); return true;
+    shown[i] = false; draw(); return true;
   };
   window.revealAllClozes = function () {
     if (!oneByOne || mode !== "normal") return false;
     shown.fill(true); history = clozes.map(function (_,i) { return i; });
-    clearHint(); draw(); return true;
+    draw(); return true;
   };
   window.resetClozes = function () {
     if (!oneByOne || mode !== "normal") return false;
-    shown.fill(false); weak.fill(false); history = []; clearHint();
+    shown.fill(false); weak.fill(false); history = [];
     getPanels().forEach(function (p) { p.classList.remove("field-visible"); });
     var bx = card.querySelector("#obsidian-back-extra"); if (bx) bx.style.display = "";
     draw(); syncPanels(); return true;
@@ -371,24 +326,14 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
     bx.style.display = bx.style.display === "none" ? "" : "none"; return true;
   };
 
-  // Der Hint ist ein eigener, nicht-verratender Denkimpuls aus dem Kartenfeld.
-  window.showSmartHint = function () {
-    if (mode !== "normal") { notify("Zuerst den Lernmodus beenden."); return false; }
-    if (!hintSource || !hintSource.textContent.trim()) return false;
-    hintVisible = !hintVisible;
-    if (!hintVisible) hintResult.textContent = "";
-    else hintResult.innerHTML = hintSource.innerHTML;
-    closeMenu();
-    return true;
-  };
-
-  function closeMenu() { menu.hidden = true; menuButton.setAttribute("aria-expanded","false"); }
+  function closeMenu() { menu.hidden = true; menuButton.textContent = "+ Lernmodi"; menuButton.setAttribute("aria-expanded","false"); }
   menuButton.addEventListener("click", function (e) {
     e.stopPropagation(); menu.hidden = !menu.hidden;
+    menuButton.textContent = menu.hidden ? "+ Lernmodi" : "− Lernmodi";
     menuButton.setAttribute("aria-expanded",String(!menu.hidden));
   });
   function title(s) { stage.appendChild(el("h4","",s)); }
-  function para(s) { stage.appendChild(el("p","",s)); }
+  function para(s) { var p=el("p","",s); refreshMarkdown(p); stage.appendChild(p); }
   function saveState() {
     var bx = card.querySelector("#obsidian-back-extra");
     return { shown:shown.slice(), history:history.slice(), opened:getPanels().map(function (p) { return p.classList.contains("field-visible"); }), bx:bx ? bx.style.display : "" };
@@ -414,7 +359,7 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
   function begin(name) {
     if (mode !== "normal") restore();
     snapshot = saveState(); mode = name; stage.hidden = false;
-    stage.replaceChildren(); closeMenu(); clearHint(); draw();
+    stage.replaceChildren(); closeMenu(); draw();
   }
 
   // 🧠 BLIND RECALL: all visible for 5 seconds, then hidden, then compare.
@@ -446,36 +391,6 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
     closeMenu();
   }
 
-  // 🎤 ORAL EXAM: topic only, timer, then checklist using actual card answers.
-  function topicCue() {
-    var label = card.querySelector(".topic-label");
-    if (label && label.textContent.trim()) return label.textContent.trim();
-    var clone = text.cloneNode(true);
-    clone.querySelectorAll(".cloze,.learning-weak-star").forEach(function (c) { c.remove(); });
-    return (clone.textContent || "").replace(/\s+/g," ").trim().slice(0,125) || "Thema dieser Karte";
-  }
-  function oralStart() {
-    var topic = topicCue(); begin("oralSpeaking"); hideContent();
-    title("🎤 M3: Mündliche Antwort"); para("Thema: " + topic);
-    para("Erkläre die Zusammenhänge strukturiert und laut, wie in der Prüfung.");
-    var seconds = 30, clock = el("div","learning-timer",seconds+" s"); stage.appendChild(clock);
-    addButton(stage,"Checkliste anzeigen",oralCheck); addButton(stage,"Abbrechen",restore);
-    activeTimer = setInterval(function () { seconds--; clock.textContent = seconds+" s"; if (seconds <= 0) oralCheck(); },1000);
-  }
-  function oralCheck() {
-    if (mode !== "oralSpeaking") return;
-    cancelTimer(); mode = "oralCheck"; stage.replaceChildren(); title("🎤 Selbstkontrolle");
-    if (oralSource && oralSource.textContent.trim()) {
-      var oralAnswer = el("div", "learning-solution");
-      oralAnswer.innerHTML = oralSource.innerHTML;
-      stage.appendChild(oralAnswer);
-    } else {
-      para("Keine mündliche Musterantwort hinterlegt; vergleiche mit der gesamten Karte.");
-    }
-    addButton(stage,"Ganze Karte vergleichen",showEverything);
-    addButton(stage,"Zurück zum Lernen",restore);
-  }
-
   // 🎯 WEAK SPOT: only marked ★ clozes are concealed again.
   function weakReplay() {
     if (mode !== "normal") restore();
@@ -484,7 +399,7 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
     if (!count) return notify("Markiere zuerst aufgedeckte Clozes mit ☆.");
     shown = shown.map(function (_,i) { return !weak[i]; });
     history = clozes.map(function (_,i) { return weak[i] ? -1 : i; }).filter(function (i) { return i>=0; });
-    clearHint(); draw(); closeMenu(); notify("🎯 " + count + " markierte Cloze(s) erneut verdeckt.");
+    draw(); closeMenu(); notify("🎯 " + count + " markierte Cloze(s) erneut verdeckt.");
   }
 
   // Nur kartenbezogene, vollständig beantwortete Schritte anzeigen.
@@ -500,6 +415,25 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
     var parts = line.split(/\s*\|\s*/);
     return parts.length >= 3 && parts.slice(0,3).every(function (part) { return part.trim(); }) ? parts : null;
   }).filter(Boolean);
+  var topicLabel = card.querySelector("#topic-label");
+  var priorityText = (card.querySelector("#priority-meta")?.textContent || "").toLowerCase();
+  var priorityChip = card.querySelector("#priority-chip");
+  if (priorityChip && /(?:^|\s)high_yield(?:\s|$)/.test(priorityText)) {
+    priorityChip.textContent = "High yield";
+    priorityChip.classList.add("high-yield");
+    priorityChip.hidden = false;
+  } else if (priorityChip && /(?:^|\s)low_yield(?:\s|$)/.test(priorityText)) {
+    priorityChip.textContent = "Low yield";
+    priorityChip.classList.add("low-yield");
+    priorityChip.hidden = false;
+  }
+  if (topicLabel && topicLabel.textContent.indexOf(" › ") >= 0) {
+    var topicParts = topicLabel.textContent.split(" › ");
+    topicLabel.textContent = topicParts.shift();
+    var areaChip = el("span", "context-chip area-chip", topicParts.join(" › "));
+    topicLabel.insertAdjacentElement("afterend", areaChip);
+  }
+  var scopeLine = sourceLines(algorithmSource).find(function (line) { return /^@Bereich:\s*\S/i.test(line); });
   var clinicalButton = menu.querySelector('[data-learn="algorithm"]');
   if (clinicalButton && !clinicalSteps.length) {
     clinicalButton.disabled = true;
@@ -512,20 +446,16 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
   }
   function clinicalShow() {
     if (mode !== "algorithm") return;
-    stage.replaceChildren(); var s = clinicalSteps[clinicalIndex];
-    title("🩺 Clinical Algorithm · Runde " + clinicalRound + " · " + (clinicalIndex+1) + "/" + clinicalSteps.length);
+    hideContent(); stage.replaceChildren(); var s = clinicalSteps[clinicalIndex];
+    title("🩺 Klinischer Algorithmus · " + (scopeLine ? scopeLine.replace(/^@Bereich:\s*/i, "") + " · " : "") + "Runde " + clinicalRound + " · " + (clinicalIndex+1) + "/" + clinicalSteps.length);
     para(s[0] + ": " + s[1]);
+    para("Antworte mündlich, dann decke die Lösung auf.");
     var material = el("div","learning-solution"); material.hidden = true;
     material.appendChild(el("div","",s[2]));
     if (s[3]) material.appendChild(el("p","",s.slice(3).join(" | ")));
+    refreshMarkdown(material);
     stage.appendChild(material);
-    addButton(stage,"Antwort aufdecken / verbergen",function () { material.hidden = !material.hidden; });
-    addButton(stage,clinicalIndex===clinicalSteps.length-1 ? "Neue Runde ↻" : "Nächster Schritt →",function () {
-      if (clinicalIndex < clinicalSteps.length-1) { clinicalIndex++; clinicalShow(); }
-      else { clinicalIndex=0; clinicalRound++; clinicalShow(); }
-    });
-    if (clinicalIndex>0) addButton(stage,"← Zurück",function () { clinicalIndex--; clinicalShow(); });
-    addButton(stage,"Abbrechen",restore);
+    addModeControls();
   }
 
   // Prüfungsfeld als Folge konkreter Frage-Antwort-Paare lesen.
@@ -549,58 +479,93 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
   if (!oberarztQuestions.length) oberarztQuestions = extractQuestionAnswers().map(function (q) {
     return {chapter:"Prüfungsfragen",question:q.question,answer:q.answer};
   });
+  var examChip = card.querySelector("#exam-chip");
+  if (oberarztQuestions.length) {
+    examChip.textContent = oberarztQuestions.length + (oberarztQuestions.length === 1 ? " Frage" : " Fragen");
+    examChip.classList.add("available");
+    examChip.hidden = false;
+  }
   var oberarztButton = menu.querySelector('[data-learn="oberarzt"]');
   if (oberarztButton && !oberarztQuestions.length) {
     oberarztButton.disabled = true;
     oberarztButton.title = "Keine beantwortete Prüfungsfrage hinterlegt";
   }
   var m3Questions = [], m3Position = 0, m3Round = 1;
-  function shuffleQuestions(previous) {
-    var result = oberarztQuestions.slice();
-    for (var i=result.length-1;i>0;i--) {
-      var j=Math.floor(Math.random()*(i+1)), tmp=result[i]; result[i]=result[j]; result[j]=tmp;
-    }
-    if (result.length>1 && previous && result[0].question===previous.question) {
-      var first=result.shift(); result.push(first);
-    }
-    return result;
-  }
   function oberarztStart() {
     var qs = oberarztQuestions;
     begin("oberarzt"); hideContent();
     if (!qs.length) {
-      title("👨‍⚕️ Keine beantwortete Prüfungsfrage auf dieser Karte");
+      title("🎤 Keine beantwortete Prüfungsfrage auf dieser Karte");
       addButton(stage,"Schließen",restore); return;
     }
-    m3Questions = shuffleQuestions(null); m3Position = 0; m3Round = 1; oberarztShow();
+    m3Questions = oberarztQuestions.slice(); m3Position = 0; m3Round = 1; oberarztShow();
   }
   function oberarztShow() {
     if (mode!=="oberarzt") return;
-    stage.replaceChildren();
-    title("👨‍⚕️ Oberarzt-Hakensprung · " + m3Questions[m3Position].chapter + " · Runde " + m3Round + " · " + (m3Position+1) + "/" + m3Questions.length);
+    hideContent(); stage.replaceChildren();
+    title("🎤 Prüfungssimulation · " + m3Questions[m3Position].chapter + " · Runde " + m3Round + " · " + (m3Position+1) + "/" + m3Questions.length);
     para(m3Questions[m3Position].question);
     para("Antworte erst frei und decke dann die Musterantwort auf.");
-    addButton(stage,m3Position===m3Questions.length-1 ? "Neue Fragerunde ↻" : "Nächste Frage →",function () {
-      if (m3Position<m3Questions.length-1) m3Position++;
-      else { m3Questions=shuffleQuestions(m3Questions[m3Position]); m3Position=0; m3Round++; }
-      oberarztShow();
-    });
-    if (m3Position>0) addButton(stage,"← Vorherige Frage",function () { m3Position--; oberarztShow(); });
     var answerArea = el("div","learning-solution",m3Questions[m3Position].answer); answerArea.hidden = true;
+    refreshMarkdown(answerArea);
     stage.appendChild(answerArea);
-    addButton(stage,"Antwort aufdecken / verbergen",function () { answerArea.hidden = !answerArea.hidden; });
-    addButton(stage,"Ganze Karte vergleichen",showEverything);
-    addButton(stage,"Beenden",restore);
+    addModeControls();
+  }
+
+  function inQuestionMode() { return mode === "algorithm" || mode === "oberarzt"; }
+  function toggleModeAnswer() {
+    if (!inQuestionMode()) return false;
+    var answer = stage.querySelector(".learning-solution");
+    if (!answer) return false;
+    answer.hidden = !answer.hidden; return true;
+  }
+  function nextModeItem() {
+    if (mode === "algorithm") {
+      if (++clinicalIndex >= clinicalSteps.length) { clinicalIndex = 0; clinicalRound++; }
+      clinicalShow(); return true;
+    }
+    if (mode === "oberarzt") {
+      if (++m3Position >= m3Questions.length) { m3Position = 0; m3Round++; }
+      oberarztShow(); return true;
+    }
+    return false;
+  }
+  function previousModeItem() {
+    if (mode === "algorithm") {
+      if (clinicalIndex > 0) clinicalIndex--;
+      else if (clinicalRound > 1) { clinicalRound--; clinicalIndex = clinicalSteps.length-1; }
+      clinicalShow(); return true;
+    }
+    if (mode === "oberarzt") {
+      if (m3Position > 0) m3Position--;
+      else if (m3Round > 1) { m3Round--; m3Position = m3Questions.length-1; }
+      oberarztShow(); return true;
+    }
+    return false;
+  }
+  function showModeCard() { if (!inQuestionMode()) return false; showEverything(); return true; }
+  function rehideMode() {
+    if (!inQuestionMode()) return false;
+    hideContent();
+    var answer = stage.querySelector(".learning-solution");
+    if (answer) answer.hidden = true;
+    return true;
+  }
+  function addModeControls() {
+    addButton(stage,"Antwort",toggleModeAnswer,"N");
+    addButton(stage,"Zurück",previousModeItem,"←");
+    addButton(stage,"Weiter",nextModeItem,"→");
+    addButton(stage,"Ganze Karte",showModeCard,",");
+    addButton(stage,"Wieder verdecken",rehideMode,"C");
+    addButton(stage,"Schließen",restore);
   }
 
   menu.addEventListener("click",function (e) {
     var b=e.target.closest("button[data-learn]"); if (!b || b.disabled || !menu.contains(b)) return;
     e.preventDefault(); e.stopPropagation();
     var type=b.getAttribute("data-learn");
-    if(type==="hint") window.showSmartHint();
     if(type==="blind") blindStart();
     if(type==="random") randomToggle();
-    if(type==="oral") oralStart();
     if(type==="weak") weakReplay();
     if(type==="algorithm") clinicalStart();
     if(type==="oberarzt") oberarztStart();
@@ -616,12 +581,21 @@ Enthält nur EINEN Hint-Button; KEIN Peek, KEIN User Action 9.
     if(e.defaultPrevented||e.repeat||e.ctrlKey||e.metaKey||e.altKey) return;
     if(e.target && (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)||e.target.isContentEditable)) return;
     var key=(e.key||"").toLowerCase(); var done=false;
-    if(key==="n") done=window.revealNextCloze();
-    else if(key==="x") done=window.showNextExtraPanel();
-    else if(key===",") done=window.revealAllClozes();
-    else if(key==="c") done=window.resetClozes();
-    else if(key==="v") done=window.hidePreviousCloze();
-    else if(key==="h") done=window.showSmartHint();
+    if (inQuestionMode()) {
+      if (key === "n") done = toggleModeAnswer();
+      else if (key === "arrowright") done = nextModeItem();
+      else if (key === "arrowleft") done = previousModeItem();
+      else if (key === ",") done = showModeCard();
+      else if (key === "c") done = rehideMode();
+    } else if (mode === "normal") {
+      if(key==="n") done=window.revealNextCloze();
+      else if(key==="x") done=window.showNextExtraPanel();
+      else if(key===",") done=window.revealAllClozes();
+      else if(key==="c") done=window.resetClozes();
+      else if(key==="v") done=window.hidePreviousCloze();
+      else if(key==="k" && clinicalSteps.length) { clinicalStart(); done = true; }
+      else if(key==="p" && oberarztQuestions.length) { oberarztStart(); done = true; }
+    }
     if(done){ e.preventDefault(); e.stopImmediatePropagation(); }
   }
   document.addEventListener("keydown",shortcuts,true);

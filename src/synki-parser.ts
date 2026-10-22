@@ -13,6 +13,7 @@ export type ParsedSynkiCardBlock = {
 	noteId: null | string
 	raw: string
 	startOffset: number
+	subdeck: null | string
 	tags: string[]
 }
 
@@ -93,6 +94,8 @@ export const DEFAULT_SYNKI_PARSER_OPTIONS: SynkiParserOptions = {
 		merksprüche: 'Merksprüche',
 		symptombild: 'Symptombild',
 		'symptom image': 'Symptombild',
+		subdeck: 'SUBDECK',
+		unterdeck: 'SUBDECK',
 		'one by one': 'One by one',
 		questions: 'Prüfungsfragen',
 		'prüfungsfragen': 'Prüfungsfragen',
@@ -143,6 +146,8 @@ export const FIELD_ALIASES: Record<string, string> = {
 	merksprüche: 'Merksprüche',
 	symptombild: 'Symptombild',
 	'symptom image': 'Symptombild',
+	subdeck: 'SUBDECK',
+	unterdeck: 'SUBDECK',
 	'one by one': 'One by one',
 	questions: 'Prüfungsfragen',
 	'prüfungsfragen': 'Prüfungsfragen',
@@ -204,6 +209,12 @@ export function splitTags(input: string): string[] {
 	return [...new Set(input.split(/[,\s]+/u).map((tag) => tag.trim()).filter(Boolean))]
 }
 
+export function resolveCardDeckName(targetDeck: string, subdeck: null | string): string {
+	if (subdeck === null || subdeck.length === 0) return targetDeck
+	if (!isValidSubdeck(subdeck)) throw new Error(`Ungültiges SUBDECK: '${subdeck}'.`)
+	return `${targetDeck}::${subdeck}`
+}
+
 export function insertSyncedNoteIds(
 	markdown: string,
 	synced: { card: ParsedSynkiCardBlock; noteId: string }[],
@@ -245,7 +256,12 @@ function parseCardInner(
 	}
 
 	const fields = parseFields(body, options)
-	for (const field of options.fields) {
+	const subdeck = fields.SUBDECK === undefined ? null : fields.SUBDECK.trim()
+	delete fields.SUBDECK
+	if (subdeck !== null && subdeck.length > 0 && !isValidSubdeck(subdeck)) {
+		errors.push(`Kartenblock '${modelName || 'unbekannt'}' hat ein ungültiges SUBDECK.`)
+	}
+	for (const field of options.fields.filter((name) => name !== 'SUBDECK')) {
 		fields[field] ??= ''
 	}
 
@@ -265,10 +281,16 @@ function parseCardInner(
 			noteId,
 			raw,
 			startOffset,
+			subdeck,
 			tags,
 		},
 		errors,
 	}
+}
+
+function isValidSubdeck(subdeck: string): boolean {
+	return !/[\r\n]/u.test(subdeck) &&
+		subdeck.split('::').every((segment) => segment.trim().length > 0 && !segment.includes(':'))
 }
 
 function parseFields(body: string, options: SynkiParserOptions): Record<string, string> {

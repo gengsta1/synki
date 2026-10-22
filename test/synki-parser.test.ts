@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { DEFAULT_SYNKI_PARSER_OPTIONS, insertSyncedNoteIds, parseSynkiDocument, splitTags } from '../src/synki-parser'
+import { DEFAULT_SYNKI_PARSER_OPTIONS, insertSyncedNoteIds, parseSynkiDocument, resolveCardDeckName, splitTags } from '../src/synki-parser'
 
 const sample = `# Cushing-Syndrom
 
@@ -45,6 +45,64 @@ describe('synki parser', () => {
 		expect(parsed.cards[0]?.fields.Dosis).toBe('zweimal 8 mg Dexamethason nachts.')
 		expect(parsed.cards[0]?.fields.Symptombild).toBe('![[Cushing-Syndrom.jpeg]]')
 		expect(parsed.cards[0]?.tags).toEqual(['medicine', 'example', 'diagnosis'])
+		expect(parsed.cards[0]?.subdeck).toBeNull()
+	})
+
+	test('routes individual blocks into nested subdecks without creating an Anki field', () => {
+		const parsed = parseSynkiDocument(`## Anki
+TARGET DECK: Innere::Diagnosen::Pankreatitis
+
+START
+Cloze_obsidian
+SUBDECK: Gesamtüberblick
+Text: {{c1::A}}
+END
+
+START
+Cloze_obsidian
+Unterdeck: Ursachen::Biliär
+Text: {{c1::B}}
+END
+
+START
+Cloze_obsidian
+Text: {{c1::C}}
+END
+`)
+
+		expect(parsed.errors).toEqual([])
+		expect(parsed.cards.map((card) => card.subdeck)).toEqual([
+			'Gesamtüberblick', 'Ursachen::Biliär', null,
+		])
+		expect(parsed.cards[0]?.fields).not.toHaveProperty('SUBDECK')
+		expect(parsed.cards[1]?.fields).not.toHaveProperty('SUBDECK')
+		expect(parsed.cards.map((card) => resolveCardDeckName(parsed.targetDeck!, card.subdeck))).toEqual([
+			'Innere::Diagnosen::Pankreatitis::Gesamtüberblick',
+			'Innere::Diagnosen::Pankreatitis::Ursachen::Biliär',
+			'Innere::Diagnosen::Pankreatitis',
+		])
+	})
+
+	test('an empty SUBDECK explicitly resolves to the parent and invalid paths are rejected', () => {
+		const parsed = parseSynkiDocument(`## Anki
+TARGET DECK: Innere::Diagnosen::Pankreatitis
+
+START
+Cloze_obsidian
+SUBDECK:
+Text: {{c1::A}}
+END
+
+START
+Cloze_obsidian
+SUBDECK: Ursachen::::Biliär
+Text: {{c1::B}}
+END
+`)
+		expect(parsed.cards[0]?.subdeck).toBe('')
+		expect(resolveCardDeckName(parsed.targetDeck!, parsed.cards[0]!.subdeck)).toBe(parsed.targetDeck)
+		expect(parsed.errors).toContain("Kartenblock 'Cloze_obsidian' hat ein ungültiges SUBDECK.")
+		expect(() => resolveCardDeckName(parsed.targetDeck!, parsed.cards[1]!.subdeck)).toThrow('Ungültiges SUBDECK')
 	})
 
 	test('reads and writes stable Anki note ids', () => {

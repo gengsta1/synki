@@ -6,6 +6,7 @@ import {
 	DEFAULT_SYNKI_PARSER_OPTIONS,
 	insertSyncedNoteIds,
 	parseSynkiDocument,
+	resolveCardDeckName,
 	type SynkiParserOptions,
 	type ParsedSynkiCardBlock,
 } from './synki-parser'
@@ -98,9 +99,10 @@ export async function syncSynkiFile(
 
 	for (const card of parsed.cards) {
 		const modelName = card.modelName || options.defaultModelName
-		const requiredFields = modelName === options.defaultModelName ? options.fields : Object.keys(card.fields)
+		const requiredFields = modelName === options.defaultModelName ? options.fields.filter((name) => name !== 'SUBDECK') : Object.keys(card.fields)
 
 		try {
+			const deckName = resolveCardDeckName(parsed.targetDeck, card.subdeck)
 			if ((card.fields[options.textFieldName]?.trim() ?? '').length === 0) {
 				throw new Error(`Card block for '${modelName}' has no ${options.textFieldName} field.`)
 			}
@@ -111,7 +113,7 @@ export async function syncSynkiFile(
 			}
 
 			const payload: SynkiNotePayload = {
-				deckName: parsed.targetDeck,
+				deckName,
 				fields: await renderFieldsForAnki(plugin, file, client, card.fields),
 				modelName,
 				tags: [...new Set([...parsed.fileTags, ...card.tags])],
@@ -122,6 +124,9 @@ export async function syncSynkiFile(
 				synced.push({ card, noteId })
 			} else {
 				await client.updateNote(card.noteId, payload)
+				if (card.subdeck !== null) {
+					await client.moveNoteToDeck(card.noteId, deckName)
+				}
 				synced.push({ card, noteId: card.noteId })
 			}
 		} catch (error) {
@@ -228,7 +233,7 @@ async function renderFieldsForAnki(
 	return Object.fromEntries(rendered)
 }
 
-async function renderInlineMarkdown(
+export async function renderInlineMarkdown(
 	plugin: SynkiPlugin,
 	sourceFile: TFile,
 	client: SynkiConnectClient,
@@ -256,6 +261,24 @@ async function renderInlineMarkdown(
 		const binary = new Uint8Array(await plugin.app.vault.readBinary(image))
 		await client.storeMediaFile(filename, toBase64(binary))
 		rendered = rendered.replace(match[0], `<img src="${escapeHtmlAttribute(filename)}">`)
+	}
+
+	// Der medizinische Prompt verwendet im Symptombild-Feld bereits HTML-Images.
+	// Auch diese lokalen Vault-Dateien müssen vor dem Sync in Ankis Medienordner.
+	const htmlImages = [...rendered.matchAll(/<img\b[^>]*\bsrc=(['"])([^'"]+)\1[^>]*>/giu)]
+	for (const match of htmlImages) {
+		const link = match[2]?.trim()
+		if (!link || /^(?:https?:|data:|anki:|synki-)/iu.test(link)) {
+			continue
+		}
+		const image = plugin.app.metadataCache.getFirstLinkpathDest(link, sourceFile.path)
+		if (!(image instanceof TFile)) {
+			continue
+		}
+		const filename = `synki-${image.path.replaceAll(/[^A-Za-z0-9._-]/gu, '_')}`
+		const binary = new Uint8Array(await plugin.app.vault.readBinary(image))
+		await client.storeMediaFile(filename, toBase64(binary))
+		rendered = rendered.replace(match[0], match[0].replace(link, escapeHtmlAttribute(filename)))
 	}
 
 	return rendered

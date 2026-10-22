@@ -634,7 +634,7 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 					html`Copy-paste format:<br /><code>## Anki</code><br /><code>TARGET DECK:
 						YourDeck::Subdeck</code><br /><code>FILE TAGS: optional tags</code><br /><br /><code
 							>START</code
-						><br /><code>Cloze</code><br /><code
+						><br /><code>Cloze</code><br /><code>SUBDECK: optional deeper subdeck</code><br /><code
 							>Text: Your {{c1::answer::hint}} with **bold** text.</code
 						><br /><code>Back Extra:</code><br /><code>Tags: optional</code><br /><code>END</code>`,
 				),
