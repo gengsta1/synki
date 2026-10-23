@@ -28,5 +28,6 @@ jobs:
           make_latest: false
           files: |
             dist/main.js
+            dist/styles.css
             manifest.json
           overwrite_files: true

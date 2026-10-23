@@ -39,6 +39,7 @@ import { FilteredDeckModal } from './filtered-deck-modal'
 const DRIVE_LETTER_REGEX = /^[A-Z]:/iv
 const SYNKI_MAIN_BUNDLE_URL = 'https://github.com/gengsta1/synki/releases/download/main/main.js'
 const SYNKI_MAIN_MANIFEST_URL = 'https://github.com/gengsta1/synki/releases/download/main/manifest.json'
+const SYNKI_MAIN_STYLES_URL = 'https://github.com/gengsta1/synki/releases/download/main/styles.css'
 
 export default class SynkiPlugin extends Plugin {
 	public override settings: SynkiPluginSettings = getSynkiPluginDefaultSettings(this.app)
@@ -59,9 +60,10 @@ export default class SynkiPlugin extends Plugin {
 
 	async updateFromGitHubMain(): Promise<void> {
 		try {
-			const [bundle, manifest] = await Promise.all([
+			const [bundle, manifest, styles] = await Promise.all([
 				requestUrl({ url: SYNKI_MAIN_BUNDLE_URL }),
 				requestUrl({ url: SYNKI_MAIN_MANIFEST_URL }),
+				requestUrl({ url: SYNKI_MAIN_STYLES_URL }),
 			])
 			const pluginDirectory =
 				this.manifest.dir ?? normalizePath(`${this.app.vault.configDir}/plugins/${this.manifest.id}`)
@@ -70,6 +72,10 @@ export default class SynkiPlugin extends Plugin {
 			await this.app.vault.adapter.write(
 				normalizePath(`${pluginDirectory}/manifest.json`),
 				manifest.text,
+			)
+			await this.app.vault.adapter.write(
+				normalizePath(`${pluginDirectory}/styles.css`),
+				styles.text,
 			)
 
 			new Notice('Synki: Latest main version installed. Restart Obsidian once to activate it.', 10_000)
