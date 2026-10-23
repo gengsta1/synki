@@ -19,7 +19,6 @@ const STATE_CHOICES: Array<[FilteredDeckState, string]> = [
 ]
 
 export class FilteredDeckModal extends Modal {
-	private readonly plugin: SynkiPlugin
 	private readonly selected = new Set<string>()
 	private readonly options: FilteredDeckOptions = { additionalSearch: '', flag: '', state: 'all', tag: '' }
 	private notes: SelectableNote[] = []
@@ -30,7 +29,6 @@ export class FilteredDeckModal extends Modal {
 
 	public constructor(plugin: SynkiPlugin) {
 		super(plugin.app)
-		this.plugin = plugin
 	}
 
 	public override onOpen(): void {

@@ -1,7 +1,11 @@
 import { describe, expect, test, vi } from 'vitest'
 
 const TFileMock = vi.hoisted(() => class {
-	constructor(public path: string) {}
+	public path: string
+
+	constructor(path: string) {
+		this.path = path
+	}
 })
 
 vi.mock('obsidian', () => ({
