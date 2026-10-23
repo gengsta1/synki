@@ -988,14 +988,30 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 				type: 'group',
 			},
 			{
+				heading: 'Filtered Deck Generator',
+				items: [
+					{
+						desc: 'Wähle mehrere Notizen aus „6 - Main Notes“ und erzeuge daraus eine Anki-Suchabfrage. Filter für fällige, neue und weitere Karten sind im Dialog verfügbar.',
+						name: 'Gefilterten Stapel vorbereiten',
+						render: (setting) => {
+							setting.addButton((button) => {
+								button.setButtonText('Generator öffnen')
+								button.onClick(this.plugin.openFilteredDeckGenerator)
+							})
+						},
+					},
+				],
+				type: 'group',
+			},
+			{
 				heading: 'Advanced',
 				items: [
 					{
 						desc: sanitizeHTMLToDom(
 							html`Show advanced settings below to accommodate certain edge cases and to facilitate
-								development and debugging of early releases of Yanki.<br />Trouble with the plugin?
+								development and debugging of early releases of Synki.<br />Trouble with the plugin?
 								Please
-								<a href="https://github.com/kitschpatrol/yanki-obsidian/issues">open an issue</a>.`,
+								<a href="https://github.com/gengsta1/synki/issues">open an issue</a>.`,
 						),
 						name: 'Show advanced settings',
 						render: (setting) => {

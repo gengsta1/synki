@@ -124,16 +124,6 @@
   </div>
   <section id="learning-stage" class="learning-stage" hidden></section>
 
-  <!-- AnkiMobile: unsichtbare Auslöser für die bewährte .click()-Methode -->
-  <div id="ankimobile-actions" hidden>
-    <button type="button" id="ua2" onclick="showNextExtraPanel()"></button>
-    <button type="button" id="ua3" onclick="resetClozes()"></button>
-    <button type="button" id="ua4" onclick="revealAllClozes()"></button>
-    <button type="button" id="ua5" onclick="hidePreviousExtraPanel()"></button>
-    <button type="button" id="ua6" onclick="hidePreviousCloze()"></button>
-    <button type="button" id="ua7" onclick="toggleAllExtraPanels()"></button>
-    <button type="button" id="ua8" onclick="toggleBackExtra()"></button>
-  </div>
 </div>
 
 
@@ -327,10 +317,14 @@
   };
 
   function closeMenu() { menu.hidden = true; menuButton.textContent = "+ Lernmodi"; menuButton.setAttribute("aria-expanded","false"); }
-  menuButton.addEventListener("click", function (e) {
-    e.stopPropagation(); menu.hidden = !menu.hidden;
+  function toggleMenu() {
+    menu.hidden = !menu.hidden;
     menuButton.textContent = menu.hidden ? "+ Lernmodi" : "− Lernmodi";
     menuButton.setAttribute("aria-expanded",String(!menu.hidden));
+    return true;
+  }
+  menuButton.addEventListener("click", function (e) {
+    e.preventDefault(); e.stopPropagation(); toggleMenu();
   });
   function title(s) { stage.appendChild(el("h4","",s)); }
   function para(s) { var p=el("p","",s); refreshMarkdown(p); stage.appendChild(p); }
@@ -449,7 +443,6 @@
     hideContent(); stage.replaceChildren(); var s = clinicalSteps[clinicalIndex];
     title("🩺 Klinischer Algorithmus · " + (scopeLine ? scopeLine.replace(/^@Bereich:\s*/i, "") + " · " : "") + "Runde " + clinicalRound + " · " + (clinicalIndex+1) + "/" + clinicalSteps.length);
     para(s[0] + ": " + s[1]);
-    para("Antworte mündlich, dann decke die Lösung auf.");
     var material = el("div","learning-solution"); material.hidden = true;
     material.appendChild(el("div","",s[2]));
     if (s[3]) material.appendChild(el("p","",s.slice(3).join(" | ")));
@@ -505,7 +498,6 @@
     hideContent(); stage.replaceChildren();
     title("🎤 Prüfungssimulation · " + m3Questions[m3Position].chapter + " · Runde " + m3Round + " · " + (m3Position+1) + "/" + m3Questions.length);
     para(m3Questions[m3Position].question);
-    para("Antworte erst frei und decke dann die Musterantwort auf.");
     var answerArea = el("div","learning-solution",m3Questions[m3Position].answer); answerArea.hidden = true;
     refreshMarkdown(answerArea);
     stage.appendChild(answerArea);
@@ -576,12 +568,36 @@
     img.addEventListener("click",function (e) { e.stopPropagation(); img.classList.toggle("image-zoomed"); });
   });
 
-  // Desktop keyboard controls. AnkiMobile uses User Actions below, NOT key simulation.
+  // AnkiMobile user actions call the same functions as the visible buttons.
+  // In question modes the existing eight slots become answer/navigation controls.
+  window.obsidianReviewAction = function (number) {
+    if (number === 8) return toggleMenu();
+    if (inQuestionMode()) {
+      if (number === 1) return toggleModeAnswer();
+      if (number === 2) return nextModeItem();
+      if (number === 3) return previousModeItem();
+      if (number === 4) return showModeCard();
+      if (number === 5) return rehideMode();
+      if (number === 6) { restore(); return true; }
+      return false;
+    }
+    if (number === 1) return window.revealNextCloze();
+    if (number === 2) return window.showNextExtraPanel();
+    if (number === 3) return window.resetClozes();
+    if (number === 4) return window.revealAllClozes();
+    if (number === 5) return window.hidePreviousExtraPanel();
+    if (number === 6) return window.hidePreviousCloze();
+    if (number === 7) return window.toggleAllExtraPanels();
+    return false;
+  };
+  // External keyboards on iPad can deliver keydown to the card webview.
+  // Touch users can always use the visible buttons or AnkiMobile User Actions.
   function shortcuts(e) {
     if(e.defaultPrevented||e.repeat||e.ctrlKey||e.metaKey||e.altKey) return;
     if(e.target && (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)||e.target.isContentEditable)) return;
     var key=(e.key||"").toLowerCase(); var done=false;
-    if (inQuestionMode()) {
+    if (key === "+" || key === "add" || (e.code === "Equal" && e.shiftKey)) done = toggleMenu();
+    else if (inQuestionMode()) {
       if (key === "n") done = toggleModeAnswer();
       else if (key === "arrowright") done = nextModeItem();
       else if (key === "arrowleft") done = previousModeItem();
@@ -599,20 +615,20 @@
     if(done){ e.preventDefault(); e.stopImmediatePropagation(); }
   }
   document.addEventListener("keydown",shortcuts,true);
-  window.__obsidianCleanup=function(){ cancelTimer(); document.removeEventListener("keydown",shortcuts,true); };
+  window.__obsidianCleanup=function(){ cancelTimer(); document.removeEventListener("keydown",shortcuts,true); delete window.obsidianReviewAction; };
   draw(); syncPanels();
   card.style.visibility="visible";
 })();
 </script>
 
-<!-- User Actions direkt auf DOM-Buttons, wie dein funktionierender iPad-Test. -->
+<!-- AnkiMobile: User Actions in Einstellungen den gewünschten Taps/Swipes zuweisen. -->
 <script>
-function userJs1() { var b=document.getElementById("next-point-button"); if(b && !b.disabled) b.click(); }
-function userJs2() { var b=document.getElementById("ua2"); if(b) b.click(); }
-function userJs3() { var b=document.getElementById("ua3"); if(b) b.click(); }
-function userJs4() { var b=document.getElementById("ua4"); if(b) b.click(); }
-function userJs5() { var b=document.getElementById("ua5"); if(b) b.click(); }
-function userJs6() { var b=document.getElementById("ua6"); if(b) b.click(); }
-function userJs7() { var b=document.getElementById("ua7"); if(b) b.click(); }
-function userJs8() { var b=document.getElementById("ua8"); if(b) b.click(); }
+function userJs1() { if(window.obsidianReviewAction) window.obsidianReviewAction(1); }
+function userJs2() { if(window.obsidianReviewAction) window.obsidianReviewAction(2); }
+function userJs3() { if(window.obsidianReviewAction) window.obsidianReviewAction(3); }
+function userJs4() { if(window.obsidianReviewAction) window.obsidianReviewAction(4); }
+function userJs5() { if(window.obsidianReviewAction) window.obsidianReviewAction(5); }
+function userJs6() { if(window.obsidianReviewAction) window.obsidianReviewAction(6); }
+function userJs7() { if(window.obsidianReviewAction) window.obsidianReviewAction(7); }
+function userJs8() { if(window.obsidianReviewAction) window.obsidianReviewAction(8); }
 </script>

@@ -34,6 +34,7 @@ import {
 } from 'obsidian'
 import { renameFiles, syncFiles } from 'yanki'
 import { syncCurrentSynkiNote, syncMainNotesSynki, syncSynkiFile } from './synki-sync'
+import { FilteredDeckModal } from './filtered-deck-modal'
 
 const DRIVE_LETTER_REGEX = /^[A-Z]:/iv
 const SYNKI_MAIN_BUNDLE_URL = 'https://github.com/gengsta1/synki/releases/download/main/main.js'
@@ -50,6 +51,10 @@ export default class SynkiPlugin extends Plugin {
 		// https://forum.obsidian.md/t/open-settings-for-my-plugin-community-plugin-settings-deeplink/61563/4
 		this.app.setting.open()
 		this.app.setting.openTabById(this.manifest.id)
+	}
+
+	openFilteredDeckGenerator = () => {
+		new FilteredDeckModal(this).open()
 	}
 
 	async updateFromGitHubMain(): Promise<void> {
@@ -479,6 +484,9 @@ export default class SynkiPlugin extends Plugin {
 		this.addRibbonIcon('folder-sync', 'Sync all Synki folders to Anki', () => {
 			void syncMainNotesSynki(this)
 		})
+		this.addRibbonIcon('list-filter', 'Synki: Filtered deck generator', () => {
+			this.openFilteredDeckGenerator()
+		})
 
 		this.addCommand({
 			callback: () => {
@@ -507,6 +515,12 @@ export default class SynkiPlugin extends Plugin {
 			},
 			id: 'sync-block-folders',
 			name: 'Sync all block folders to Anki',
+		})
+
+		this.addCommand({
+			callback: this.openFilteredDeckGenerator,
+			id: 'filtered-deck-generator',
+			name: 'Filtered deck from Main Notes',
 		})
 
 		// Spot any changes since last session

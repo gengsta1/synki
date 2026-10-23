@@ -58,3 +58,59 @@ div.synki-settings {
 		}
 	}
 }
+
+.synki-filter-modal .synki-filter-search,
+.synki-filter-modal .synki-filter-query,
+.synki-filter-modal .synki-filter-options input,
+.synki-filter-modal .synki-filter-options select {
+	width: 100%;
+}
+
+.synki-filter-modal .synki-filter-actions {
+	display: flex;
+	gap: 0.5rem;
+	margin: 0.75rem 0;
+}
+
+.synki-filter-modal .synki-filter-list {
+	max-height: 24vh;
+	overflow-y: auto;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	padding: 0.5rem;
+}
+
+.synki-filter-modal .synki-filter-row {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.25rem;
+}
+
+.synki-filter-modal .synki-filter-options {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.75rem;
+	margin: 1rem 0;
+}
+
+.synki-filter-modal .synki-filter-options label {
+	display: grid;
+	gap: 0.25rem;
+}
+
+.synki-filter-modal .synki-filter-query {
+	min-height: 6rem;
+	resize: vertical;
+}
+
+.synki-filter-modal .synki-filter-help {
+	font-size: var(--font-smaller);
+	color: var(--text-muted);
+}
+
+@media (max-width: 600px) {
+	.synki-filter-modal .synki-filter-options {
+		grid-template-columns: 1fr;
+	}
+}
