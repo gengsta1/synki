@@ -20,10 +20,11 @@ export const MEDICAL_TEMPLATE_FIELDS = [
 	'Merksprüche',
 	'Eigene Prüfungsfragen',
 	'Symptombild',
-	'Mündliche Präsentation',
+	'Q&A',
 	'Klinischer Algorithmus',
 	'Oberarzt-Modus',
 	'One by one',
+	'Ankinotiz',
 ] as const
 
 const MEDICAL_SIGNATURE_FIELDS = [

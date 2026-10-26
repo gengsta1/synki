@@ -163,9 +163,23 @@ END
 		expect(parsed.errors).toEqual([])
 		expect(parsed.cards[0]?.fields.Thema).toBe('Morbus Crohn')
 		expect(parsed.cards[0]?.fields.Hint).toBe('Denke an die Endoskopie.')
-		expect(parsed.cards[0]?.fields['Mündliche Präsentation']).toContain('beschreibe')
+		expect(parsed.cards[0]?.fields['Q&A']).toContain('beschreibe')
 		expect(parsed.cards[0]?.fields['Klinischer Algorithmus']).toContain('Diagnostik | Welche')
 		expect(parsed.cards[0]?.fields['Oberarzt-Modus']).toContain('Was schließt')
 		expect(parsed.cards[0]?.fields['One by one']).toBe('true')
+	})
+
+	test('parses the new Q&A field without splitting its answer lines', () => {
+		const parsed = parseSynkiDocument(`## Anki
+TARGET DECK: Medicine::M3
+START
+Cloze_obsidian
+Text: Was ist richtig? {{c1::Antwort}}
+Q&A: Kapitel 5 | Welche Symptome? | Wahn und Halluzinationen.
+Kapitel 5 | Welche Behandlung? | Antipsychotika und Begleitung.
+END
+`)
+		expect(parsed.errors).toEqual([])
+		expect(parsed.cards[0]?.fields['Q&A']).toContain('Kapitel 5 | Welche Behandlung? | Antipsychotika')
 	})
 })

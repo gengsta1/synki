@@ -1,634 +1,1647 @@
 
 <div id="obsidian-card" class="card-shell" style="visibility:hidden;">
+
   <div class="card-context">
+
     {{#Thema}}<span class="context-chip topic-label" id="topic-label">{{Thema}}</span>{{/Thema}}
+
     <span class="context-chip priority-chip" id="priority-chip" hidden></span>
+
     <span class="context-chip exam-chip" id="exam-chip" hidden></span>
+
+    <label id="random-cloze-label" class="random-cloze-label" hidden>
+      <input type="checkbox" id="random-cloze-checkbox"> 🎲 Random Cloze
+    </label>
+    <div class="am-mobile-answer" id="am-mobile-answer" hidden>
+      <span id="anki-mini-timer" title="Antwortzeit">◷ 00:00</span>
+    </div>
+<!-- Mini-Pomodoro: nur in AnkiMobile sichtbar -->
+<div id="am-pomo" class="am-pomo" hidden>
+  <button type="button" id="am-pomo-chip" class="am-pomo-chip" aria-expanded="false" aria-controls="am-pomo-panel">🍅 <span id="am-pomo-clock">25:00</span></button>
+  <div id="am-pomo-panel" class="am-pomo-panel" hidden>
+    <div class="am-pomo-head"><strong id="am-pomo-phase">Fokus</strong><span id="am-pomo-round">Runde 1/4</span></div>
+    <div class="am-pomo-track"><div id="am-pomo-fill" class="am-pomo-fill"></div></div>
+    <div class="am-pomo-buttons">
+      <button type="button" data-pomo="toggle" id="am-pomo-toggle">Start</button>
+      <button type="button" data-pomo="stop">Stopp</button>
+      <button type="button" data-pomo="restart">Neustart</button>
+      <button type="button" data-pomo="skip">Weiter</button>
+    </div>
+    <button type="button" data-pomo="settings" class="am-pomo-settings-toggle" id="am-pomo-settings-button">⚙ Einstellungen</button>
+    <div id="am-pomo-settings" class="am-pomo-settings" hidden>
+      <div class="am-pomo-settings-grid">
+        <label>Fokus (Min.)<input type="number" inputmode="numeric" id="am-focus" min="1" max="180" step="1"></label>
+        <label>Kurzpause (Min.)<input type="number" inputmode="numeric" id="am-short" min="1" max="90" step="1"></label>
+        <label>Langpause (Min.)<input type="number" inputmode="numeric" id="am-long" min="1" max="180" step="1"></label>
+        <label>Runden bis Langpause<input type="number" inputmode="numeric" id="am-rounds" min="1" max="20" step="1"></label>
+      </div>
+      <label class="am-pomo-check"><input type="checkbox" id="am-auto"> Phasen automatisch fortsetzen</label>
+      <label class="am-pomo-check"><input type="checkbox" id="am-sound"> Signalton bei Phasenwechsel</label>
+      <button type="button" data-pomo="save" class="am-pomo-save">Einstellungen speichern</button>
+      <div class="am-pomo-note">Neue Einstellungen starten eine neue, angehaltene Fokus-Serie.</div>
+    </div>
+    <div id="am-pomo-info" class="am-pomo-info" aria-live="polite"></div>
   </div>
+</div>
+
+
+  </div>
+
   <div id="priority-meta" hidden>{{Tags}}</div>
 
   <!-- 1. KARTENFRAGE (IMMER OBEN) -->
+
   <div id="text" class="main-text">{{cloze:Text}}</div>
 
   <!-- 2. BEKANNTE CLOZE-BUTTONS DIREKT UNTER DER FRAGE -->
+
   <div id="onebyone-controls" class="onebyone-controls" style="display:none;">
+
     <button type="button" id="next-point-button" class="reveal-button"
+
       onclick="revealNextCloze(); event.stopPropagation();">
+
       Next point <span class="shortcut">N</span>
+
     </button>
+
     <button type="button" class="reveal-button secondary"
+
       onclick="revealAllClozes(); event.stopPropagation();">
+
       Show all <span class="shortcut">,</span>
+
     </button>
+
     <button type="button" class="reveal-button secondary"
+
       onclick="resetClozes(); event.stopPropagation();">
+
       Reset <span class="shortcut">C</span>
+
     </button>
+
     <span id="onebyone-progress" class="onebyone-progress"></span>
+
   </div>
 
   <!-- 3. ZUSATZFELDER -->
+
   <div id="after-answer">
+
     {{#Back Extra}}
+
     <div id="obsidian-back-extra" class="back-extra">{{Back Extra}}</div>
+
     {{/Back Extra}}
 
     <div class="extra-panels">
+
       {{#Definitionen}}
+
       <div id="field-extra-1" class="extra-field definition-field">
+
         <div class="field-title">Definitionen</div>
+
         <div class="field-content">{{Definitionen}}</div>
+
       </div>
+
       {{/Definitionen}}
+
       {{#Mechanismus}}
+
       <div id="field-extra-2" class="extra-field mechanism-field">
+
         <div class="field-title">Mechanismus</div>
+
         <div class="field-content">{{Mechanismus}}</div>
+
       </div>
+
       {{/Mechanismus}}
+
       {{#Klinik}}
+
       <div id="field-extra-3" class="extra-field clinic-field">
+
         <div class="field-title">Klinik</div>
+
         <div class="field-content">{{Klinik}}</div>
+
       </div>
+
       {{/Klinik}}
+
       {{#Dosis}}
+
       <div id="field-extra-4" class="extra-field dose-field">
+
         <div class="field-title">Dosis</div>
+
         <div class="field-content">{{Dosis}}</div>
+
       </div>
+
       {{/Dosis}}
+
       {{#Cave}}
+
       <div id="field-extra-5" class="extra-field cave-field">
+
         <div class="field-title">Cave</div>
+
         <div class="field-content">{{Cave}}</div>
+
       </div>
+
       {{/Cave}}
+
       {{#Merksprüche}}
+
       <div id="field-extra-6" class="extra-field mnemonic-field">
+
         <div class="field-title">Merksprüche</div>
+
         <div class="field-content">{{Merksprüche}}</div>
+
       </div>
+
       {{/Merksprüche}}
+
       {{#Eigene Prüfungsfragen}}<div id="legacy-exam-source" hidden>{{Eigene Prüfungsfragen}}</div>{{/Eigene Prüfungsfragen}}
+
       {{#Symptombild}}
+
       <div id="field-extra-8" class="extra-field symptom-field">
+
         <div class="field-title">Symptombild</div>
+
         <div class="field-content">{{Symptombild}}</div>
+
       </div>
+
       {{/Symptombild}}
+      {{#Ankinotiz}}
+      <div id="field-extra-9" class="extra-field definition-field anki-note-field">
+        <div class="field-title">Anki-Notiz (lokal)</div>
+        <div class="field-content">{{Ankinotiz}}</div>
+      </div>
+      {{/Ankinotiz}}
     </div>
 
     <div class="field-buttons">
+
       {{#Definitionen}}
+
       <button type="button" class="field-button definition-button" data-panel="field-extra-1" onclick="toggleField('field-extra-1'); event.stopPropagation();">Definitionen</button>
+
       {{/Definitionen}}
+
       {{#Mechanismus}}
+
       <button type="button" class="field-button mechanism-button" data-panel="field-extra-2" onclick="toggleField('field-extra-2'); event.stopPropagation();">Mechanismus</button>
+
       {{/Mechanismus}}
+
       {{#Klinik}}
+
       <button type="button" class="field-button clinic-button" data-panel="field-extra-3" onclick="toggleField('field-extra-3'); event.stopPropagation();">Klinik</button>
+
       {{/Klinik}}
+
       {{#Dosis}}
+
       <button type="button" class="field-button dose-button" data-panel="field-extra-4" onclick="toggleField('field-extra-4'); event.stopPropagation();">Dosis</button>
+
       {{/Dosis}}
+
       {{#Cave}}
+
       <button type="button" class="field-button cave-button" data-panel="field-extra-5" onclick="toggleField('field-extra-5'); event.stopPropagation();">Cave</button>
+
       {{/Cave}}
+
       {{#Merksprüche}}
+
       <button type="button" class="field-button mnemonic-button" data-panel="field-extra-6" onclick="toggleField('field-extra-6'); event.stopPropagation();">Merksprüche</button>
+
       {{/Merksprüche}}
+
       {{#Symptombild}}
+
       <button type="button" class="field-button symptom-button" data-panel="field-extra-8" onclick="toggleField('field-extra-8'); event.stopPropagation();">Symptombild</button>
+
       {{/Symptombild}}
+      {{#Ankinotiz}}
+      <button type="button" class="field-button definition-button" data-panel="field-extra-9" onclick="toggleField('field-extra-9'); event.stopPropagation();">Anki-Notiz</button>
+      {{/Ankinotiz}}
     </div>
 
     {{#Tags}}<div class="tags">{{Tags}}</div>{{/Tags}}
+
   </div>
 
   <!-- 4. LERNMODI NACH DEN ZUSATZFELDERN -->
+
   <div id="learning-bar" class="learning-bar">
+
     <button type="button" id="learning-menu-button" class="reveal-button"
-      aria-expanded="false" aria-controls="learning-menu">+ Lernmodi</button>
+
+      aria-expanded="false" aria-controls="learning-menu">+ Lernmodi <span class="shortcut">9</span></button>
+
     <div id="learning-menu" class="learning-menu" hidden>
+
       <button type="button" class="reveal-button" data-learn="blind">Blind Recall</button>
-      <button type="button" class="reveal-button" data-learn="random" id="random-mode-button" aria-pressed="false">Random Cloze</button>
-      <button type="button" class="reveal-button" data-learn="weak">Weak Spot Replay</button>
-      {{#Klinischer Algorithmus}}<button type="button" class="reveal-button" data-learn="algorithm">Klinischer Algorithmus <span class="shortcut">K</span></button>{{/Klinischer Algorithmus}}
-      {{^Klinischer Algorithmus}}<button type="button" class="reveal-button" disabled title="Kein klinischer Algorithmus hinterlegt">Klinischer Algorithmus <span class="shortcut">K</span></button>{{/Klinischer Algorithmus}}
-      <button type="button" class="reveal-button" data-learn="oberarzt">Prüfungssimulation <span class="shortcut">P</span></button>
+<button type="button" class="reveal-button" data-learn="weak">Weak Spot Replay</button>
+
+      {{#Klinischer Algorithmus}}<button type="button" class="reveal-button" data-learn="algorithm">Klinischer Algorithmus <span class="shortcut">N</span></button>{{/Klinischer Algorithmus}}
+
+      {{^Klinischer Algorithmus}}<button type="button" class="reveal-button" disabled title="Kein klinischer Algorithmus hinterlegt">Klinischer Algorithmus <span class="shortcut">N</span></button>{{/Klinischer Algorithmus}}
+
+      <button type="button" class="reveal-button" data-learn="oberarzt">Prüfungssimulation <span class="shortcut">X</span></button>
+
+      <button type="button" class="reveal-button" data-learn="qa">Q&amp;A <span class="shortcut">Q</span></button>
+
     </div>
+
     {{#Klinischer Algorithmus}}<div id="algorithm-source" hidden>{{Klinischer Algorithmus}}</div>{{/Klinischer Algorithmus}}
+
     {{#Oberarzt-Modus}}<div id="oberarzt-source" hidden>{{Oberarzt-Modus}}</div>{{/Oberarzt-Modus}}
+
+    {{#Q&A}}<div id="qa-source" hidden>{{Q&A}}</div>{{/Q&A}}
+
     <div id="learning-status" class="learning-status" aria-live="polite"></div>
+
   </div>
+
   <section id="learning-stage" class="learning-stage" hidden></section>
 
 </div>
 
-
 <script>
+
 (function () {
+
   "use strict";
 
   // Desktop-Anki verwendet die Webansicht teilweise mehrfach.
+
   if (typeof window.__obsidianCleanup === "function") window.__obsidianCleanup();
 
   var card = document.getElementById("obsidian-card");
+
   if (!card) return;
+
   var text = card.querySelector("#text");
+
   var after = card.querySelector("#after-answer");
+
   var controls = card.querySelector("#onebyone-controls");
+
   var nextButton = card.querySelector("#next-point-button");
+
   var progress = card.querySelector("#onebyone-progress");
+
   var menu = card.querySelector("#learning-menu");
+
   var menuButton = card.querySelector("#learning-menu-button");
+
   var algorithmSource = card.querySelector("#algorithm-source");
+
   var oberarztSource = card.querySelector("#oberarzt-source");
+
+  var qaSource = card.querySelector("#qa-source");
+
   var stage = card.querySelector("#learning-stage");
+
   var status = card.querySelector("#learning-status");
-  var randomButton = card.querySelector("#random-mode-button");
+
+  var randomCheckbox = card.querySelector("#random-cloze-checkbox");
+  var randomLabel = card.querySelector("#random-cloze-label");
+  var RANDOM_KEY = "obsidian_random_cloze_v2";
+  function loadRandom() {
+    try { return localStorage.getItem(RANDOM_KEY) === "true"; } catch(e) {
+      try { return sessionStorage.getItem(RANDOM_KEY) === "true"; } catch(e2) {return false;}
+    }
+  }
+  function saveRandom(value) {
+    try {localStorage.setItem(RANDOM_KEY, String(value));} catch(e) {
+      try {sessionStorage.setItem(RANDOM_KEY, String(value));} catch(e2) {}
+    }
+  }
+
   var m3Source = card.querySelector("#legacy-exam-source");
+
   if (!text) return;
 
   function el(tag, cls, content) {
+
     var x = document.createElement(tag);
+
     if (cls) x.className = cls;
+
     if (content !== undefined) x.textContent = content;
+
     return x;
+
   }
+
   function addButton(parent, label, fn, shortcut) {
+
     var b = el("button", "reveal-button", label);
+
     b.type = "button";
+
     if (shortcut) b.appendChild(el("span", "shortcut", shortcut));
+
     b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); fn(); });
+
     parent.appendChild(b);
+
     return b;
+
   }
+
   function notify(s) { status.textContent = s || ""; }
+
   function refreshMarkdown(root) {
+
     if (!root) return;
+
     var walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+
     var nodes = [];
+
     while (walk.nextNode()) nodes.push(walk.currentNode);
+
     nodes.forEach(function (node) {
+
       var s = node.nodeValue || "";
+
       if (!/[\*_\[]/.test(s)) return;
+
       var parts = s.split(/(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g);
+
       if (parts.length === 1) return;
+
       var frag = document.createDocumentFragment();
+
       parts.forEach(function (p) {
+
         var item = null;
+
         if (/^\*\*[^*]+\*\*$/.test(p)) {
+
           item = el("strong", "", p.slice(2,-2));
+
         } else if (/^__[^_]+__$/.test(p)) {
+
           item = el("u", "", p.slice(2,-2));
+
         } else if (/^\*[^*]+\*$/.test(p)) {
+
           item = el("em", "", p.slice(1,-1));
+
         } else {
+
           var match = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/.exec(p);
+
           if (match) { item = el("a", "", match[1]); item.href = match[2]; }
+
         }
+
         frag.appendChild(item || document.createTextNode(p));
+
       });
+
       if (node.parentNode) node.parentNode.replaceChild(frag, node);
+
     });
+
   }
+
   refreshMarkdown(text);
+
   card.querySelectorAll(".back-extra,.field-content").forEach(refreshMarkdown);
 
   var clozes = Array.from(text.querySelectorAll(".cloze"));
+
   var val = `{{text:One by one}}`.trim().toLowerCase();
+
   var oneByOne = ["true","on","1","ja","yes"].indexOf(val) !== -1 && clozes.length >= 2;
+
   var answers = clozes.map(function (c) { return c.innerHTML; });
+
   var answerTexts = clozes.map(function (c) { return (c.textContent || "").replace(/\s+/g," ").trim(); });
+
   var shown = clozes.map(function () { return !oneByOne; });
+
   var weak = clozes.map(function () { return false; });
+
   var history = [];
-  var random = false;
+
+  var random = loadRandom();
+  if (randomCheckbox) {
+    randomCheckbox.checked = random;
+    randomLabel.hidden = !oneByOne;
+    randomCheckbox.addEventListener("change", function(e) {
+      e.stopPropagation();
+      random = randomCheckbox.checked;
+      saveRandom(random);
+      notify(random ? "🎲 Random Cloze ist für weitere Karten aktiv." : "Normale Cloze-Reihenfolge ist aktiv.");
+    });
+    randomLabel.addEventListener("click", function(e){e.stopPropagation();});
+  }
+
   var mode = "normal";
+
   var snapshot = null;
+
   var activeTimer = null;
 
   function getPanels() { return Array.from(card.querySelectorAll(".extra-field")); }
+
   function completed() { return shown.every(Boolean); }
+
   function hidden() { return shown.map(function (v,i) { return v ? -1 : i; }).filter(function (i) { return i >= 0; }); }
+
   function cancelTimer() { if (activeTimer !== null) clearInterval(activeTimer); activeTimer = null; }
+
   function syncPanels() {
+
     var buttons = Array.from(card.querySelectorAll(".field-button[data-panel]"));
+
     buttons.forEach(function (b) {
+
       var id = b.getAttribute("data-panel"), p = card.querySelector("#" + id);
+
       b.classList.toggle("field-button-active", !!p && p.classList.contains("field-visible"));
+
       var old = b.querySelector(".x-shortcut"); if (old) old.remove();
+
     });
+
     var first = buttons.find(function (b) {
+
       var p = card.querySelector("#" + b.getAttribute("data-panel"));
+
       return p && !p.classList.contains("field-visible");
+
     });
+
     if (first) first.appendChild(el("span", "shortcut x-shortcut", "X"));
+
   }
+
   var stars = clozes.map(function (c,i) {
+
     var b = el("button", "learning-weak-star", "☆");
+
     b.type = "button";
+
     b.title = "Cloze " + (i+1) + " als unsicher markieren";
+
     b.setAttribute("aria-label", b.title);
+
     b.addEventListener("click", function (e) {
+
       e.preventDefault(); e.stopPropagation();
+
       if (!shown[i] || mode !== "normal") return;
+
       weak[i] = !weak[i]; draw();
+
       notify(weak.filter(Boolean).length + " schwache Cloze(s) markiert.");
+
     });
+
     c.insertAdjacentElement("afterend", b);
+
     return b;
+
   });
+
   function draw(forceAll) {
+
     clozes.forEach(function (c,i) {
+
       var visible = forceAll || shown[i];
+
       c.innerHTML = visible ? answers[i] : "[...]";
+
       c.classList.toggle("cloze-pending", !visible);
+
       stars[i].hidden = !oneByOne || !shown[i] || mode !== "normal";
+
       stars[i].textContent = weak[i] ? "★" : "☆";
+
       stars[i].setAttribute("aria-pressed", weak[i] ? "true" : "false");
+
     });
-    if (controls) controls.style.display = oneByOne ? "flex" : "none";
+
+    if (controls) controls.style.display = oneByOne && mode === "normal" ? "flex" : "none";
+
     if (progress && oneByOne) progress.textContent = shown.filter(Boolean).length + " / " + clozes.length;
+
     if (nextButton) nextButton.disabled = !oneByOne || completed() || mode !== "normal";
+
     if (mode === "normal" && after) after.style.display = (oneByOne && !completed()) ? "none" : "block";
+
   }
 
   // BASIC ACTIONS: always use the same cloze state, including Random + Weak Replay.
+
   window.revealNextCloze = function () {
+
     if (!oneByOne || mode !== "normal") return false;
+
     var candidates = hidden(); if (!candidates.length) return false;
+
     var i = random ? candidates[Math.floor(Math.random()*candidates.length)] : candidates[0];
+
     shown[i] = true; history.push(i); draw(); return true;
-  };
-  window.hidePreviousCloze = function () {
-    if (!oneByOne || mode !== "normal") return false;
-    var i = -1;
-    while (history.length && i < 0) { var j = history.pop(); if (shown[j]) i = j; }
-    if (i < 0) i = shown.lastIndexOf(true);
-    if (i < 0) return false;
-    shown[i] = false; draw(); return true;
-  };
-  window.revealAllClozes = function () {
-    if (!oneByOne || mode !== "normal") return false;
-    shown.fill(true); history = clozes.map(function (_,i) { return i; });
-    draw(); return true;
-  };
-  window.resetClozes = function () {
-    if (!oneByOne || mode !== "normal") return false;
-    shown.fill(false); weak.fill(false); history = [];
-    getPanels().forEach(function (p) { p.classList.remove("field-visible"); });
-    var bx = card.querySelector("#obsidian-back-extra"); if (bx) bx.style.display = "";
-    draw(); syncPanels(); return true;
-  };
-  window.toggleField = function (id) {
-    if (mode !== "normal" || (oneByOne && !completed())) return false;
-    var p = card.querySelector("#" + id);
-    if (!p || !p.classList.contains("extra-field")) return false;
-    p.classList.toggle("field-visible"); syncPanels(); return true;
-  };
-  window.showNextExtraPanel = function () {
-    if (mode !== "normal" || (oneByOne && !completed())) return false;
-    var p = getPanels(), next = p.find(function (x) { return !x.classList.contains("field-visible"); });
-    if (!p.length) return false;
-    if (next) next.classList.add("field-visible");
-    else p.forEach(function (x) { x.classList.remove("field-visible"); });
-    syncPanels(); return true;
-  };
-  window.hidePreviousExtraPanel = function () {
-    if (mode !== "normal" || (oneByOne && !completed())) return false;
-    var p = getPanels().filter(function (x) { return x.classList.contains("field-visible"); });
-    if (!p.length) return false;
-    p[p.length-1].classList.remove("field-visible"); syncPanels(); return true;
-  };
-  window.toggleAllExtraPanels = function () {
-    if (mode !== "normal" || (oneByOne && !completed())) return false;
-    var p = getPanels(); if (!p.length) return false;
-    var all = p.every(function (x) { return x.classList.contains("field-visible"); });
-    p.forEach(function (x) { x.classList.toggle("field-visible", !all); });
-    syncPanels(); return true;
-  };
-  window.toggleBackExtra = function () {
-    if (mode !== "normal" || (oneByOne && !completed())) return false;
-    var bx = card.querySelector("#obsidian-back-extra"); if (!bx) return false;
-    bx.style.display = bx.style.display === "none" ? "" : "none"; return true;
+
   };
 
-  function closeMenu() { menu.hidden = true; menuButton.textContent = "+ Lernmodi"; menuButton.setAttribute("aria-expanded","false"); }
-  function toggleMenu() {
-    menu.hidden = !menu.hidden;
-    menuButton.textContent = menu.hidden ? "+ Lernmodi" : "− Lernmodi";
-    menuButton.setAttribute("aria-expanded",String(!menu.hidden));
-    return true;
-  }
-  menuButton.addEventListener("click", function (e) {
-    e.preventDefault(); e.stopPropagation(); toggleMenu();
-  });
-  function title(s) { stage.appendChild(el("h4","",s)); }
-  function para(s) { var p=el("p","",s); refreshMarkdown(p); stage.appendChild(p); }
-  function saveState() {
-    var bx = card.querySelector("#obsidian-back-extra");
-    return { shown:shown.slice(), history:history.slice(), opened:getPanels().map(function (p) { return p.classList.contains("field-visible"); }), bx:bx ? bx.style.display : "" };
-  }
-  function showEverything() {
-    text.style.display = ""; draw(true);
-    if (after) after.style.display = "block";
-    getPanels().forEach(function (p) { p.classList.add("field-visible"); });
+  window.hidePreviousCloze = function () {
+
+    if (!oneByOne || mode !== "normal") return false;
+
+    var i = -1;
+
+    while (history.length && i < 0) { var j = history.pop(); if (shown[j]) i = j; }
+
+    if (i < 0) i = shown.lastIndexOf(true);
+
+    if (i < 0) return false;
+
+    shown[i] = false; draw(); return true;
+
+  };
+
+  window.revealAllClozes = function () {
+
+    if (!oneByOne || mode !== "normal") return false;
+
+    shown.fill(true); history = clozes.map(function (_,i) { return i; });
+
+    draw(); return true;
+
+  };
+
+  window.resetClozes = function () {
+
+    if (!oneByOne || mode !== "normal") return false;
+
+    shown.fill(false); weak.fill(false); history = [];
+
+    getPanels().forEach(function (p) { p.classList.remove("field-visible"); });
+
     var bx = card.querySelector("#obsidian-back-extra"); if (bx) bx.style.display = "";
-    syncPanels();
+
+    draw(); syncPanels(); return true;
+
+  };
+
+  window.toggleField = function (id) {
+
+    if (mode !== "normal" || (oneByOne && !completed())) return false;
+
+    var p = card.querySelector("#" + id);
+
+    if (!p || !p.classList.contains("extra-field")) return false;
+
+    p.classList.toggle("field-visible"); syncPanels(); return true;
+
+  };
+
+  window.showNextExtraPanel = function () {
+
+    if (mode !== "normal" || (oneByOne && !completed())) return false;
+
+    var p = getPanels(), next = p.find(function (x) { return !x.classList.contains("field-visible"); });
+
+    if (!p.length) return false;
+
+    if (next) next.classList.add("field-visible");
+
+    else p.forEach(function (x) { x.classList.remove("field-visible"); });
+
+    syncPanels(); return true;
+
+  };
+
+  window.hidePreviousExtraPanel = function () {
+
+    if (mode !== "normal" || (oneByOne && !completed())) return false;
+
+    var p = getPanels().filter(function (x) { return x.classList.contains("field-visible"); });
+
+    if (!p.length) return false;
+
+    p[p.length-1].classList.remove("field-visible"); syncPanels(); return true;
+
+  };
+
+  window.toggleAllExtraPanels = function () {
+
+    if (mode !== "normal" || (oneByOne && !completed())) return false;
+
+    var p = getPanels(); if (!p.length) return false;
+
+    var all = p.every(function (x) { return x.classList.contains("field-visible"); });
+
+    p.forEach(function (x) { x.classList.toggle("field-visible", !all); });
+
+    syncPanels(); return true;
+
+  };
+
+  window.toggleBackExtra = function () {
+
+    if (mode !== "normal" || (oneByOne && !completed())) return false;
+
+    var bx = card.querySelector("#obsidian-back-extra"); if (!bx) return false;
+
+    bx.style.display = bx.style.display === "none" ? "" : "none"; return true;
+
+  };
+
+  function setMenuLabel(open) {
+
+    menuButton.replaceChildren(document.createTextNode((open ? "−" : "+") + " Lernmodi "));
+
+    var badge = el("span","shortcut","9"); menuButton.appendChild(badge);
+
+    menuButton.setAttribute("aria-expanded",String(open));
+
   }
-  function hideContent() { text.style.display = "none"; if (after) after.style.display = "none"; }
-  function restore() {
-    cancelTimer(); mode = "normal"; stage.hidden = true; stage.replaceChildren(); text.style.display = "";
-    if (snapshot) {
-      shown = snapshot.shown.slice(); history = snapshot.history.slice();
-      getPanels().forEach(function (p,i) { p.classList.toggle("field-visible",!!snapshot.opened[i]); });
-      var bx = card.querySelector("#obsidian-back-extra"); if (bx) bx.style.display = snapshot.bx;
-      snapshot = null;
+
+  function closeMenu() { menu.hidden = true; setMenuLabel(false); }
+
+  function toggleMenu() {
+
+    if (mode !== "normal") {
+
+      restore();
+
+      closeMenu();
+
+      return true;
+
     }
-    draw(); syncPanels(); notify("Normaler Lernmodus.");
+
+    menu.hidden = !menu.hidden;
+
+    setMenuLabel(!menu.hidden);
+
+    return true;
+
   }
+
+  menuButton.addEventListener("click", function (e) {
+
+    e.preventDefault(); e.stopPropagation(); toggleMenu();
+
+  });
+
+  function title(s) { stage.appendChild(el("h4","",s)); }
+
+  function para(s) { var p=el("p","",s); refreshMarkdown(p); stage.appendChild(p); }
+
+  function saveState() {
+
+    var bx = card.querySelector("#obsidian-back-extra");
+
+    return { shown:shown.slice(), history:history.slice(), opened:getPanels().map(function (p) { return p.classList.contains("field-visible"); }), bx:bx ? bx.style.display : "" };
+
+  }
+
+  function showEverything() {
+
+    text.style.display = ""; draw(true);
+
+    if (after) after.style.display = "block";
+
+    getPanels().forEach(function (p) { p.classList.add("field-visible"); });
+
+    var bx = card.querySelector("#obsidian-back-extra"); if (bx) bx.style.display = "";
+
+    syncPanels();
+
+  }
+
+  function hideContent() { text.style.display = "none"; if (after) after.style.display = "none"; }
+
+  function restore() {
+
+    cancelTimer(); mode = "normal"; stage.hidden = true; stage.replaceChildren(); text.style.display = "";
+
+    if (snapshot) {
+
+      shown = snapshot.shown.slice(); history = snapshot.history.slice();
+
+      getPanels().forEach(function (p,i) { p.classList.toggle("field-visible",!!snapshot.opened[i]); });
+
+      var bx = card.querySelector("#obsidian-back-extra"); if (bx) bx.style.display = snapshot.bx;
+
+      snapshot = null;
+
+    }
+
+    draw(); syncPanels(); notify("Normaler Lernmodus.");
+
+  }
+
   function begin(name) {
+
     if (mode !== "normal") restore();
+
     snapshot = saveState(); mode = name; stage.hidden = false;
+
     stage.replaceChildren(); closeMenu(); draw();
+
   }
 
   // 🧠 BLIND RECALL: all visible for 5 seconds, then hidden, then compare.
+
   function blindStart() {
+
     begin("blindPreview"); showEverything();
+
     title("🧠 5 Sekunden einprägen");
+
     var seconds = 5, clock = el("div","learning-timer",seconds+" s"); stage.appendChild(clock);
+
     addButton(stage,"Jetzt verdecken",blindHide);
+
     activeTimer = setInterval(function () { seconds--; clock.textContent = seconds+" s"; if (seconds <= 0) blindHide(); },1000);
-  }
-  function blindHide() {
-    if (mode !== "blindPreview") return;
-    cancelTimer(); mode = "blindHidden"; hideContent(); stage.replaceChildren();
-    title("🧠 Was stand auf der Karte?");
-    para("Erkläre den Inhalt frei. Danach kannst du die vollständige Lösung vergleichen.");
-    addButton(stage,"Lösung vergleichen",function () {
-      mode = "blindCompare"; stage.replaceChildren(); title("🧠 Selbstkontrolle");
-      addButton(stage,"Normalen Modus fortsetzen",restore); showEverything();
-    });
-    addButton(stage,"Abbrechen",restore);
+
   }
 
-  // 🎲 RANDOM: existing Next point and AnkiMobile User Action 1 draw a random hidden cloze.
-  function randomToggle() {
-    if (!oneByOne) return notify("Random benötigt One by one = true und mindestens zwei Clozes.");
-    if (mode !== "normal") restore(); random = !random;
-    randomButton.setAttribute("aria-pressed",String(random));
-    notify(random ? "🎲 Zufall aktiv: Next wählt eine zufällige verdeckte Cloze." : "Normale Reihenfolge aktiv.");
-    closeMenu();
+  function blindHide() {
+
+    if (mode !== "blindPreview") return;
+
+    cancelTimer(); mode = "blindHidden"; hideContent(); stage.replaceChildren();
+
+    title("🧠 Was stand auf der Karte?");
+
+    para("Erkläre den Inhalt frei. Danach kannst du die vollständige Lösung vergleichen.");
+
+    addButton(stage,"Lösung vergleichen",function () {
+
+      mode = "blindCompare"; stage.replaceChildren(); title("🧠 Selbstkontrolle");
+
+      addButton(stage,"Normalen Modus fortsetzen",restore); showEverything();
+
+    });
+
+    addButton(stage,"Abbrechen",restore);
+
   }
+
+  // 🎲 Die Checkbox in der Kopfzeile steuert Random Cloze dauerhaft.
 
   // 🎯 WEAK SPOT: only marked ★ clozes are concealed again.
+
   function weakReplay() {
+
     if (mode !== "normal") restore();
+
     if (!oneByOne) return notify("Weak Spot Replay benötigt One by one.");
+
     var count = weak.filter(Boolean).length;
+
     if (!count) return notify("Markiere zuerst aufgedeckte Clozes mit ☆.");
+
     shown = shown.map(function (_,i) { return !weak[i]; });
+
     history = clozes.map(function (_,i) { return weak[i] ? -1 : i; }).filter(function (i) { return i>=0; });
+
     draw(); closeMenu(); notify("🎯 " + count + " markierte Cloze(s) erneut verdeckt.");
+
   }
 
   // Nur kartenbezogene, vollständig beantwortete Schritte anzeigen.
+
   function sourceLines(source) {
+
     if (!source) return [];
+
     var html = source.innerHTML.replace(/<br\s*\/?\s*>/gi,"\n")
+
       .replace(/<\/(?:p|li|div)>/gi,"\n");
+
     var temp = el("div"); temp.innerHTML = html;
+
     return (temp.textContent || "").replace(/\u00a0/g," ").split(/\n/)
+
       .map(function (line) { return line.trim(); }).filter(Boolean);
+
   }
+
   var clinicalSteps = sourceLines(algorithmSource).map(function (line) {
+
     var parts = line.split(/\s*\|\s*/);
+
     return parts.length >= 3 && parts.slice(0,3).every(function (part) { return part.trim(); }) ? parts : null;
+
   }).filter(Boolean);
+
   var topicLabel = card.querySelector("#topic-label");
+
   var priorityText = (card.querySelector("#priority-meta")?.textContent || "").toLowerCase();
+
   var priorityChip = card.querySelector("#priority-chip");
+
   if (priorityChip && /(?:^|\s)high_yield(?:\s|$)/.test(priorityText)) {
-    priorityChip.textContent = "High yield";
+
+    priorityChip.textContent = "◆";
+
+    priorityChip.title = "High Yield";
+
+    priorityChip.setAttribute("aria-label", "High Yield");
+
     priorityChip.classList.add("high-yield");
+
     priorityChip.hidden = false;
+
   } else if (priorityChip && /(?:^|\s)low_yield(?:\s|$)/.test(priorityText)) {
-    priorityChip.textContent = "Low yield";
+
+    priorityChip.textContent = "◇";
+
+    priorityChip.title = "Low Yield";
+
+    priorityChip.setAttribute("aria-label", "Low Yield");
+
     priorityChip.classList.add("low-yield");
+
     priorityChip.hidden = false;
+
   }
+
   if (topicLabel && topicLabel.textContent.indexOf(" › ") >= 0) {
+
     var topicParts = topicLabel.textContent.split(" › ");
+
     topicLabel.textContent = topicParts.shift();
+
     var areaChip = el("span", "context-chip area-chip", topicParts.join(" › "));
+
     topicLabel.insertAdjacentElement("afterend", areaChip);
+
   }
+
   var scopeLine = sourceLines(algorithmSource).find(function (line) { return /^@Bereich:\s*\S/i.test(line); });
+
   var clinicalButton = menu.querySelector('[data-learn="algorithm"]');
+
   if (clinicalButton && !clinicalSteps.length) {
+
     clinicalButton.disabled = true;
+
     clinicalButton.title = "Kein verwendbarer Algorithmus hinterlegt";
+
   }
+
   var clinicalIndex = 0, clinicalRound = 1;
+
   function clinicalStart() {
+
     if (!clinicalSteps.length) return;
+
     clinicalIndex = 0; clinicalRound = 1; begin("algorithm"); hideContent(); clinicalShow();
+
   }
+
   function clinicalShow() {
+
     if (mode !== "algorithm") return;
+
     hideContent(); stage.replaceChildren(); var s = clinicalSteps[clinicalIndex];
+
     title("🩺 Klinischer Algorithmus · " + (scopeLine ? scopeLine.replace(/^@Bereich:\s*/i, "") + " · " : "") + "Runde " + clinicalRound + " · " + (clinicalIndex+1) + "/" + clinicalSteps.length);
+
     para(s[0] + ": " + s[1]);
+
     var material = el("div","learning-solution"); material.hidden = true;
+
     material.appendChild(el("div","",s[2]));
+
     if (s[3]) material.appendChild(el("p","",s.slice(3).join(" | ")));
+
     refreshMarkdown(material);
+
     stage.appendChild(material);
+
     addModeControls();
+
   }
 
   // Prüfungsfeld als Folge konkreter Frage-Antwort-Paare lesen.
+
   function extractQuestionAnswers() {
+
     var segments = sourceLines(m3Source).join("\n").split(/\s*\|\s*|\s+—\s+|\n/);
+
     var entries = [], question = "";
+
     segments.forEach(function (segment) {
+
       var value = segment.trim().replace(/^\d+\)\s*/,"");
-      var q = /^(?:Originalfrage|Frage|Folgefrage|Nachfrage|Prüfungsfrage):\s*(.+)$/i.exec(value);
+
+      var q = /^(?:Originalfrage|Frage|Folgefrage|Nachfrage|Prüfungsfrage|Zusatzfrage):\s*(.+)$/i.exec(value);
+
       if (q) { question = q[1].trim().replace(/^[„"«]|[“"»]$/g,""); return; }
+
       var a = /^Antwort:\s*(.+)$/i.exec(value);
+
       if (a && question) { entries.push({question:question,answer:a[1].trim()}); question = ""; }
+
     });
+
     return entries.filter(function (entry) { return entry.question && entry.answer; });
-  }
-  var oberarztQuestions = sourceLines(oberarztSource).map(function (line) {
-    var parts = line.split(/\s*\|\s*/);
-    return parts.length >= 3 && parts.slice(0,3).every(function (part) { return part.trim(); })
-      ? {chapter:parts[0].trim(),question:parts[1].trim(),answer:parts.slice(2).join(" | ").trim()} : null;
-  }).filter(Boolean);
-  if (!oberarztQuestions.length) oberarztQuestions = extractQuestionAnswers().map(function (q) {
-    return {chapter:"Prüfungsfragen",question:q.question,answer:q.answer};
-  });
-  var examChip = card.querySelector("#exam-chip");
-  if (oberarztQuestions.length) {
-    examChip.textContent = oberarztQuestions.length + (oberarztQuestions.length === 1 ? " Frage" : " Fragen");
-    examChip.classList.add("available");
-    examChip.hidden = false;
-  }
-  var oberarztButton = menu.querySelector('[data-learn="oberarzt"]');
-  if (oberarztButton && !oberarztQuestions.length) {
-    oberarztButton.disabled = true;
-    oberarztButton.title = "Keine beantwortete Prüfungsfrage hinterlegt";
-  }
-  var m3Questions = [], m3Position = 0, m3Round = 1;
-  function oberarztStart() {
-    var qs = oberarztQuestions;
-    begin("oberarzt"); hideContent();
-    if (!qs.length) {
-      title("🎤 Keine beantwortete Prüfungsfrage auf dieser Karte");
-      addButton(stage,"Schließen",restore); return;
-    }
-    m3Questions = oberarztQuestions.slice(); m3Position = 0; m3Round = 1; oberarztShow();
-  }
-  function oberarztShow() {
-    if (mode!=="oberarzt") return;
-    hideContent(); stage.replaceChildren();
-    title("🎤 Prüfungssimulation · " + m3Questions[m3Position].chapter + " · Runde " + m3Round + " · " + (m3Position+1) + "/" + m3Questions.length);
-    para(m3Questions[m3Position].question);
-    var answerArea = el("div","learning-solution",m3Questions[m3Position].answer); answerArea.hidden = true;
-    refreshMarkdown(answerArea);
-    stage.appendChild(answerArea);
-    addModeControls();
+
   }
 
-  function inQuestionMode() { return mode === "algorithm" || mode === "oberarzt"; }
+  var oberarztQuestions = sourceLines(oberarztSource).map(function (line) {
+
+    var parts = line.split(/\s*\|\s*/);
+
+    return parts.length >= 3 && parts.slice(0,3).every(function (part) { return part.trim(); })
+
+      ? {chapter:parts[0].trim(),question:parts[1].trim(),answer:parts.slice(2).join(" | ").trim()} : null;
+
+  }).filter(Boolean);
+
+  if (!oberarztQuestions.length) oberarztQuestions = extractQuestionAnswers().map(function (q) {
+
+    return {chapter:"Prüfungsfragen",question:q.question,answer:q.answer};
+
+  });
+
+  var qaQuestions = sourceLines(qaSource).map(function (line) {
+
+    var parts = line.split(/\s*\|\s*/);
+
+    return parts.length >= 3 && parts.slice(0,3).every(function (part) { return part.trim(); })
+
+      ? {chapter:parts[0].trim(),question:parts[1].trim(),answer:parts.slice(2).join(" | ").trim()} : null;
+
+  }).filter(Boolean);
+
+  var examChip = card.querySelector("#exam-chip");
+
+  if (examChip && (oberarztQuestions.length || clinicalSteps.length || qaQuestions.length)) {
+
+    var cardLearningContent = [];
+
+    if (oberarztQuestions.length) cardLearningContent.push("🎤 " + oberarztQuestions.length);
+
+    if (clinicalSteps.length) cardLearningContent.push("🩺 " + clinicalSteps.length);
+
+    if (qaQuestions.length) cardLearningContent.push("📖 " + qaQuestions.length);
+
+    examChip.textContent = cardLearningContent.join(" · ");
+
+    examChip.title = "Verfügbare Inhalte für die Lernmodi auf dieser Karte.";
+
+    examChip.classList.add("available");
+
+    examChip.hidden = false;
+
+  }
+
+  var oberarztButton = menu.querySelector('[data-learn="oberarzt"]');
+
+  if (oberarztButton && !oberarztQuestions.length) {
+
+    oberarztButton.disabled = true;
+
+    oberarztButton.title = "Keine beantwortete Prüfungsfrage hinterlegt";
+
+  }
+
+  var qaButton = menu.querySelector('[data-learn="qa"]');
+
+  if (qaButton && !qaQuestions.length) {
+
+    qaButton.disabled = true;
+
+    qaButton.title = "Keine Q&A-Fragen hinterlegt";
+
+  }
+
+  var qaPosition = 0, qaRound = 1;
+
+  function qaStart() {
+
+    if (!qaQuestions.length) return;
+
+    qaPosition = 0; qaRound = 1; begin("qa"); hideContent(); qaShow();
+
+  }
+
+  function qaShow() {
+
+    if (mode !== "qa") return;
+
+    hideContent(); stage.replaceChildren();
+
+    var question = qaQuestions[qaPosition];
+
+    title("📖 Q&A · " + question.chapter + " · Runde " + qaRound + " · " + (qaPosition+1) + "/" + qaQuestions.length);
+
+    para(question.question);
+
+    var answerArea = el("div","learning-solution",question.answer); answerArea.hidden = true;
+
+    refreshMarkdown(answerArea);
+
+    stage.appendChild(answerArea);
+
+    addModeControls();
+
+  }
+
+  var m3Questions = [], m3Position = 0, m3Round = 1;
+
+  function oberarztStart() {
+
+    var qs = oberarztQuestions;
+
+    begin("oberarzt"); hideContent();
+
+    if (!qs.length) {
+
+      title("🎤 Keine beantwortete Prüfungsfrage auf dieser Karte");
+
+      addButton(stage,"Schließen",restore); return;
+
+    }
+
+    m3Questions = oberarztQuestions.slice(); m3Position = 0; m3Round = 1; oberarztShow();
+
+  }
+
+  function oberarztShow() {
+
+    if (mode!=="oberarzt") return;
+
+    hideContent(); stage.replaceChildren();
+
+    title("🎤 Prüfungssimulation · " + m3Questions[m3Position].chapter + " · Runde " + m3Round + " · " + (m3Position+1) + "/" + m3Questions.length);
+
+    para(m3Questions[m3Position].question);
+
+    var answerArea = el("div","learning-solution",m3Questions[m3Position].answer); answerArea.hidden = true;
+
+    refreshMarkdown(answerArea);
+
+    stage.appendChild(answerArea);
+
+    addModeControls();
+
+  }
+
+  function inQuestionMode() { return mode === "algorithm" || mode === "oberarzt" || mode === "qa"; }
+
   function toggleModeAnswer() {
+
     if (!inQuestionMode()) return false;
+
     var answer = stage.querySelector(".learning-solution");
+
     if (!answer) return false;
+
     answer.hidden = !answer.hidden; return true;
+
   }
+
   function nextModeItem() {
+
     if (mode === "algorithm") {
+
       if (++clinicalIndex >= clinicalSteps.length) { clinicalIndex = 0; clinicalRound++; }
+
       clinicalShow(); return true;
+
     }
+
     if (mode === "oberarzt") {
+
       if (++m3Position >= m3Questions.length) { m3Position = 0; m3Round++; }
+
       oberarztShow(); return true;
+
     }
+
+    if (mode === "qa") {
+
+      if (++qaPosition >= qaQuestions.length) { qaPosition = 0; qaRound++; }
+
+      qaShow(); return true;
+
+    }
+
     return false;
+
   }
+
   function previousModeItem() {
+
     if (mode === "algorithm") {
+
       if (clinicalIndex > 0) clinicalIndex--;
+
       else if (clinicalRound > 1) { clinicalRound--; clinicalIndex = clinicalSteps.length-1; }
+
       clinicalShow(); return true;
+
     }
+
     if (mode === "oberarzt") {
+
       if (m3Position > 0) m3Position--;
+
       else if (m3Round > 1) { m3Round--; m3Position = m3Questions.length-1; }
+
       oberarztShow(); return true;
+
     }
+
+    if (mode === "qa") {
+
+      if (qaPosition > 0) qaPosition--;
+
+      else if (qaRound > 1) { qaRound--; qaPosition = qaQuestions.length-1; }
+
+      qaShow(); return true;
+
+    }
+
     return false;
+
   }
+
   function showModeCard() { if (!inQuestionMode()) return false; showEverything(); return true; }
+
   function rehideMode() {
+
     if (!inQuestionMode()) return false;
+
     hideContent();
+
     var answer = stage.querySelector(".learning-solution");
+
     if (answer) answer.hidden = true;
+
     return true;
+
   }
+
   function addModeControls() {
+
     addButton(stage,"Antwort",toggleModeAnswer,"N");
+
     addButton(stage,"Zurück",previousModeItem,"←");
-    addButton(stage,"Weiter",nextModeItem,"→");
+
+    addButton(stage,"Weiter",nextModeItem,"X");
+
     addButton(stage,"Ganze Karte",showModeCard,",");
+
     addButton(stage,"Wieder verdecken",rehideMode,"C");
+
     addButton(stage,"Schließen",restore);
+
   }
 
   menu.addEventListener("click",function (e) {
+
     var b=e.target.closest("button[data-learn]"); if (!b || b.disabled || !menu.contains(b)) return;
+
     e.preventDefault(); e.stopPropagation();
+
     var type=b.getAttribute("data-learn");
+
     if(type==="blind") blindStart();
-    if(type==="random") randomToggle();
+
+
     if(type==="weak") weakReplay();
+
     if(type==="algorithm") clinicalStart();
+
     if(type==="oberarzt") oberarztStart();
+
+    if(type==="qa") qaStart();
+
   });
 
   // Touch zoom for the symptom images.
+
   card.querySelectorAll(".symptom-field img").forEach(function (img) {
+
     img.addEventListener("click",function (e) { e.stopPropagation(); img.classList.toggle("image-zoomed"); });
+
   });
 
   // AnkiMobile user actions call the same functions as the visible buttons.
-  // In question modes the existing eight slots become answer/navigation controls.
+
+  // User Action 9 toggles the menu or exits an active learning mode.
+
+  // Action 8 remains a fallback
+
+  // for AnkiMobile versions that expose only actions 1–8.
+
+  // Actions 1 (N) and 2 (X) are context-sensitive in a learning round.
+
   window.obsidianReviewAction = function (number) {
-    if (number === 8) return toggleMenu();
+
+    if (number === 9 || number === 8) return toggleMenu();
+
+    if (!menu.hidden) {
+
+      if (number === 1 && clinicalSteps.length) { clinicalStart(); return true; }
+
+      if (number === 2 && oberarztQuestions.length) { oberarztStart(); return true; }
+
+      if (number === 3 && qaQuestions.length) { qaStart(); return true; }
+
+      if (number === 1 || number === 2 || number === 3) return false;
+
+    }
+
     if (inQuestionMode()) {
+
       if (number === 1) return toggleModeAnswer();
+
       if (number === 2) return nextModeItem();
+
       if (number === 3) return previousModeItem();
+
       if (number === 4) return showModeCard();
+
       if (number === 5) return rehideMode();
+
       if (number === 6) { restore(); return true; }
+
       return false;
+
     }
+
     if (number === 1) return window.revealNextCloze();
+
     if (number === 2) return window.showNextExtraPanel();
+
     if (number === 3) return window.resetClozes();
+
     if (number === 4) return window.revealAllClozes();
+
     if (number === 5) return window.hidePreviousExtraPanel();
+
     if (number === 6) return window.hidePreviousCloze();
+
     if (number === 7) return window.toggleAllExtraPanels();
+
     return false;
+
   };
+
   // External keyboards on iPad can deliver keydown to the card webview.
+
   // Touch users can always use the visible buttons or AnkiMobile User Actions.
+
   function shortcuts(e) {
+
     if(e.defaultPrevented||e.repeat||e.ctrlKey||e.metaKey||e.altKey) return;
+
     if(e.target && (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)||e.target.isContentEditable)) return;
+
     var key=(e.key||"").toLowerCase(); var done=false;
+
     if (key === "+" || key === "add" || (e.code === "Equal" && e.shiftKey)) done = toggleMenu();
+
+    else if (!menu.hidden && key === "n" && clinicalSteps.length) { clinicalStart(); done = true; }
+
+    else if (!menu.hidden && key === "x" && oberarztQuestions.length) { oberarztStart(); done = true; }
+
+    else if (!menu.hidden && key === "q" && qaQuestions.length) { qaStart(); done = true; }
+
+    else if (!menu.hidden && (key === "n" || key === "x" || key === "q")) done = true;
+
     else if (inQuestionMode()) {
+
       if (key === "n") done = toggleModeAnswer();
-      else if (key === "arrowright") done = nextModeItem();
+
+      else if (key === "x" || key === "arrowright") done = nextModeItem();
+
       else if (key === "arrowleft") done = previousModeItem();
+
       else if (key === ",") done = showModeCard();
+
       else if (key === "c") done = rehideMode();
+
     } else if (mode === "normal") {
+
       if(key==="n") done=window.revealNextCloze();
+
       else if(key==="x") done=window.showNextExtraPanel();
+
       else if(key===",") done=window.revealAllClozes();
+
       else if(key==="c") done=window.resetClozes();
+
       else if(key==="v") done=window.hidePreviousCloze();
-      else if(key==="k" && clinicalSteps.length) { clinicalStart(); done = true; }
-      else if(key==="p" && oberarztQuestions.length) { oberarztStart(); done = true; }
+
     }
+
     if(done){ e.preventDefault(); e.stopImmediatePropagation(); }
+
   }
+
   document.addEventListener("keydown",shortcuts,true);
+
   window.__obsidianCleanup=function(){ cancelTimer(); document.removeEventListener("keydown",shortcuts,true); delete window.obsidianReviewAction; };
+
   draw(); syncPanels();
+
   card.style.visibility="visible";
+
+})();
+
+</script>
+
+<!-- AnkiMobile: User Action 9 = Lernmodi; 1 = N; 2 = X. Action 8 bleibt als Fallback. -->
+
+<script>
+
+function userJs1() { if(window.obsidianReviewAction) window.obsidianReviewAction(1); }
+
+function userJs2() { if(window.obsidianReviewAction) window.obsidianReviewAction(2); }
+
+function userJs3() { if(window.obsidianReviewAction) window.obsidianReviewAction(3); }
+
+function userJs4() { if(window.obsidianReviewAction) window.obsidianReviewAction(4); }
+
+function userJs5() { if(window.obsidianReviewAction) window.obsidianReviewAction(5); }
+
+function userJs6() { if(window.obsidianReviewAction) window.obsidianReviewAction(6); }
+
+function userJs7() { if(window.obsidianReviewAction) window.obsidianReviewAction(7); }
+
+function userJs8() { if(window.obsidianReviewAction) window.obsidianReviewAction(8); }
+
+function userJs9() { if(window.obsidianReviewAction) window.obsidianReviewAction(9); }
+
+</script>
+
+<script>
+/* Eigenständiger AnkiMobile-Pomodoro; keine Desktop-Add-ons berührt. */
+(function () {
+  "use strict";
+  var doc = document.documentElement;
+  var isAnkiMobile = doc.classList.contains("iphone") || doc.classList.contains("ipad") ||
+    document.body.classList.contains("iphone") || document.body.classList.contains("ipad") ||
+    (/(iPhone|iPad|iPod)/i.test(navigator.userAgent) &&
+      !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.cb));
+  if (!isAnkiMobile) return;
+
+  if (typeof window.__amPomodoroCleanup === "function") window.__amPomodoroCleanup();
+  var root = document.getElementById("am-pomo");
+  if (!root) return;
+  root.hidden = false;
+  document.documentElement.classList.add("am-pomodoro-enabled");
+
+  function get(id) { return root.querySelector("#" + id); }
+  var chip = get("am-pomo-chip"), panel = get("am-pomo-panel"), clock = get("am-pomo-clock");
+  var phase = get("am-pomo-phase"), rounds = get("am-pomo-round"), fill = get("am-pomo-fill");
+  var toggle = get("am-pomo-toggle"), settings = get("am-pomo-settings"), info = get("am-pomo-info");
+  var KEY = "obsidian_ankimobile_pomodoro_v3";
+  var storage = null;
+  ["localStorage", "sessionStorage"].some(function (kind) {
+    try {
+      var s = window[kind];
+      s.setItem("__am_pomo_probe", "yes");
+      if (s.getItem("__am_pomo_probe") === "yes") {
+        s.removeItem("__am_pomo_probe"); storage = s; return true;
+      }
+    } catch (e) {}
+    return false;
+  });
+  var defaults = {focus:25, short:5, long:15, rounds:4, auto:false, sound:false};
+  function finiteInt(n, fallback, lo, hi) {
+    n = Number(n); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, Math.round(n))) : fallback;
+  }
+  function validated(c) {
+    c = c || {};
+    return {focus:finiteInt(c.focus,25,1,180), short:finiteInt(c.short,5,1,90),
+      long:finiteInt(c.long,15,1,180), rounds:finiteInt(c.rounds,4,1,20),
+      auto:c.auto === true, sound:c.sound === true};
+  }
+  function duration(s, cfg) {
+    return 60000 * (s === "short" ? cfg.short : s === "long" ? cfg.long : cfg.focus);
+  }
+  function fresh(cfg) {
+    return {config:validated(cfg), phase:"focus", completed:0, running:false,
+      endAt:0, remaining:duration("focus", validated(cfg))};
+  }
+  function load() {
+    try {
+      var raw = storage && storage.getItem(KEY);
+      if (raw) {
+        var v = JSON.parse(raw), c = validated(v.config);
+        if (["focus", "short", "long"].includes(v.phase)) {
+          return {config:c, phase:v.phase, completed:finiteInt(v.completed,0,0,1000000),
+            running:v.running === true && Number.isFinite(Number(v.endAt)),
+            endAt:Number(v.endAt) || 0,
+            remaining:Math.max(0, Number(v.remaining) || duration(v.phase,c))};
+        }
+      }
+    } catch (e) {}
+    return fresh(defaults);
+  }
+  var state = load();
+  function save() { try { if (storage) storage.setItem(KEY, JSON.stringify(state)); } catch(e) {} }
+  function left() { return state.running ? Math.max(0, state.endAt - Date.now()) : state.remaining; }
+
+  // Ton nur nach echter Nutzerinteraktion freigeschaltet. iOS kann ihn bei
+  // inaktiver App / Stummschaltung / Kartenwechsel trotzdem unterdrücken.
+  var audioCtx = null;
+  function unlockAudio() {
+    if (!state.config.sound) return;
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtx || audioCtx.state === "closed") audioCtx = new Ctx();
+      if (audioCtx.state === "suspended") audioCtx.resume().catch(function(){});
+    } catch (e) {}
+  }
+  function chime() {
+    if (!state.config.sound || document.hidden) return;
+    try {
+      if (!audioCtx || audioCtx.state !== "running") return;
+      var t = audioCtx.currentTime;
+      [660,880].forEach(function (hz, i) {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = "sine"; o.frequency.value = hz;
+        o.connect(g); g.connect(audioCtx.destination);
+        var at = t + i*0.19;
+        g.gain.setValueAtTime(0.0001, at);
+        g.gain.exponentialRampToValueAtTime(0.12, at+0.018);
+        g.gain.exponentialRampToValueAtTime(0.0001, at+0.17);
+        o.start(at); o.stop(at+0.18);
+      });
+    } catch(e) {}
+  }
+  function step(startOfNext) {
+    if (state.phase === "focus") {
+      state.completed += 1;
+      state.phase = state.completed % state.config.rounds === 0 ? "long" : "short";
+    } else state.phase = "focus";
+    state.remaining = duration(state.phase, state.config);
+    if (state.config.auto) {
+      state.running = true;
+      state.endAt = startOfNext + state.remaining;
+    } else {
+      state.running = false;
+      state.endAt = 0;
+    }
+  }
+  function advanceIfDue() {
+    if (!state.running || Date.now() < state.endAt) return;
+    var now = Date.now(), endedRecently = now - state.endAt < 3500, n = 0;
+    while (state.running && now >= state.endAt && n++ < 10000) {
+      step(state.endAt);
+    }
+    if (n >= 10000) { state = fresh(state.config); }
+    save();
+    // Nur ein Ton beim aktuellen Phasenwechsel, nicht für vergangene Stunden.
+    if (endedRecently) chime();
+    if (!state.running) info.textContent = "Phase abgeschlossen · nächste Phase bereit";
+  }
+  function fmt(ms) {
+    var seconds = Math.ceil(Math.max(0,ms)/1000);
+    return String(Math.floor(seconds/60)).padStart(2,"0") + ":" +
+      String(seconds%60).padStart(2,"0");
+  }
+  function render() {
+    if (!root.isConnected) { cleanup(); return; }
+    advanceIfDue();
+    var ms = left(), conf = state.config, base = duration(state.phase,conf);
+    clock.textContent = fmt(ms);
+    chip.firstChild.textContent = state.phase === "focus" ? "🍅 " : "☕ ";
+    phase.textContent = state.phase === "focus" ? "Fokus" : state.phase === "short" ? "Kurzpause" : "Langpause";
+    rounds.textContent = "Runde " + (state.completed % conf.rounds + 1) + "/" + conf.rounds;
+    toggle.textContent = state.running ? "Pause" : (ms < base ? "Fortsetzen" : "Start");
+    fill.style.width = Math.max(0, Math.min(100, (1 - ms/base)*100)) + "%";
+    fill.style.backgroundColor = state.phase === "focus" ? "#50c8c9" : "#efad67";
+    chip.classList.toggle("am-pomo-running", state.running);
+  }
+  function updateFields() {
+    ["focus","short","long","rounds"].forEach(function(k){get("am-"+k).value = state.config[k];});
+    get("am-auto").checked=state.config.auto;
+    get("am-sound").checked=state.config.sound;
+  }
+  function onClick(e) {
+    var b = e.target.closest("button");
+    if (!b || !root.contains(b)) return;
+    e.preventDefault(); e.stopPropagation();
+    if (b === chip) {
+      panel.hidden = !panel.hidden;
+      chip.setAttribute("aria-expanded", String(!panel.hidden));
+      if (!panel.hidden) updateFields();
+      return;
+    }
+    var action=b.getAttribute("data-pomo");
+    if (!action) return;
+    if (action === "toggle") {
+      advanceIfDue();
+      if (state.running) {state.remaining=left();state.running=false;state.endAt=0; info.textContent="Pausiert";}
+      else {state.running=true;state.endAt=Date.now()+state.remaining;info.textContent="";unlockAudio();}
+    } else if (action === "stop") {
+      state=fresh(state.config);info.textContent="Gestoppt · bereit für eine neue Serie";
+    } else if (action === "restart") {
+      state=fresh(state.config);state.running=true;state.endAt=Date.now()+state.remaining;
+      info.textContent="Neue Fokus-Serie gestartet";unlockAudio();
+    } else if (action === "skip") {
+      step(Date.now());info.textContent="Nächste Phase";
+      if (state.config.auto) unlockAudio();
+    } else if (action === "settings") {
+      settings.hidden=!settings.hidden;
+      if (!settings.hidden) updateFields();
+      return;
+    } else if (action === "save") {
+      var cfg={};
+      ["focus","short","long","rounds"].forEach(function(k){cfg[k]=Number(get("am-"+k).value);});
+      cfg.auto=get("am-auto").checked;cfg.sound=get("am-sound").checked;
+      state=fresh(validated(cfg));settings.hidden=true;
+      info.textContent="Gespeichert · neue Serie bereit";
+      unlockAudio();
+    }
+    save();render();
+  }
+  function swallow(e) {e.stopPropagation();}
+  root.addEventListener("click", onClick);
+  root.addEventListener("touchend", swallow);
+  root.addEventListener("keydown", swallow);
+  var interval = setInterval(render, 1000);
+  function visible() {if (!document.hidden) render();}
+  document.addEventListener("visibilitychange", visible);
+  function cleanup() {
+    clearInterval(interval);
+    root.removeEventListener("click", onClick);
+    root.removeEventListener("touchend", swallow);
+    root.removeEventListener("keydown", swallow);
+    document.removeEventListener("visibilitychange", visible);
+    // Timerstatus bleibt gespeichert; AudioContext von alter WebView freigeben.
+    if (audioCtx && audioCtx.state !== "closed") audioCtx.close().catch(function(){});
+  }
+  window.__amPomodoroCleanup=cleanup;
+  render();
 })();
 </script>
 
-<!-- AnkiMobile: User Actions in Einstellungen den gewünschten Taps/Swipes zuweisen. -->
 <script>
-function userJs1() { if(window.obsidianReviewAction) window.obsidianReviewAction(1); }
-function userJs2() { if(window.obsidianReviewAction) window.obsidianReviewAction(2); }
-function userJs3() { if(window.obsidianReviewAction) window.obsidianReviewAction(3); }
-function userJs4() { if(window.obsidianReviewAction) window.obsidianReviewAction(4); }
-function userJs5() { if(window.obsidianReviewAction) window.obsidianReviewAction(5); }
-function userJs6() { if(window.obsidianReviewAction) window.obsidianReviewAction(6); }
-function userJs7() { if(window.obsidianReviewAction) window.obsidianReviewAction(7); }
-function userJs8() { if(window.obsidianReviewAction) window.obsidianReviewAction(8); }
+/* Kleiner Antwort-Timer nur in AnkiMobile. */
+(function () {
+  "use strict";
+  var h=document.documentElement;
+  var ios=h.classList.contains("iphone") || h.classList.contains("ipad") ||
+    (/(iPhone|iPad|iPod)/i.test(navigator.userAgent) &&
+      !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.cb));
+  if (!ios) return;
+  if (typeof window.__ankiMiniTimerCleanup === "function") window.__ankiMiniTimerCleanup();
+  var display=document.getElementById("anki-mini-timer");
+  var holder=document.getElementById("am-mobile-answer");
+  var card=document.getElementById("obsidian-card");
+  if (!display || !card || !holder) return;
+  holder.hidden=false;
+  var now=Date.now(),start=now;
+  try {
+    var saved=Number(sessionStorage.getItem("ankiMiniTimerStart"));
+    if (saved>0 && saved<=now && now-saved<3600000) start=saved;
+  } catch(e) {}
+  var controls=card.querySelector("#onebyone-controls");
+  var oneByOne=!!(controls && controls.style.display === "flex");
+  var stoppedAt=oneByOne ? null : Date.now();
+  var hadPending=oneByOne && card.querySelectorAll(".cloze-pending").length>0;
+  function render() {
+    if (!display.isConnected) {clearInterval(interval);return;}
+    if (oneByOne) {
+      var pending=card.querySelectorAll(".cloze-pending").length;
+      if (hadPending && pending===0 && stoppedAt===null) stoppedAt=Date.now();
+      if (!hadPending && pending>0 && stoppedAt!==null) {start=Date.now();stoppedAt=null;}
+      hadPending=pending>0;
+    }
+    var s=Math.max(0,Math.floor(((stoppedAt===null?Date.now():stoppedAt)-start)/1000));
+    display.textContent="◷ "+String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+    display.classList.toggle("timer-warn",s>=30 && s<60);
+    display.classList.toggle("timer-late",s>=60);
+  }
+  var interval=setInterval(render,350);
+  window.__ankiMiniTimerCleanup=function(){clearInterval(interval);};
+  render();
+})();
 </script>

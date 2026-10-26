@@ -206,7 +206,7 @@ export function getSynkiPluginDefaultSettings(app: App): SynkiPluginSettings {
 				'Mnemonics=Merksprüche',
 				'Medical Questions=Eigene Prüfungsfragen',
 				'Symptom image=Symptombild',
-				'Oral presentation=Mündliche Präsentation',
+				'Oral presentation=Q&A',
 				'Clinical algorithm=Klinischer Algorithmus',
 				'Oberarzt mode=Oberarzt-Modus',
 				'One by one=One by one',
@@ -991,7 +991,7 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 				heading: 'Filtered Deck Generator',
 				items: [
 					{
-						desc: 'Wähle mehrere Notizen aus „6 - Main Notes“ und erzeuge daraus eine Anki-Suchabfrage. Filter für fällige, neue und weitere Karten sind im Dialog verfügbar.',
+						desc: 'Wähle mehrere Notizen aus „6 - Main Notes“ und erzeuge daraus eine dynamische Anki-Deck-Abfrage aus TARGET DECK. Filter für fällige, neue und weitere Karten sind im Dialog verfügbar.',
 						name: 'Gefilterten Stapel vorbereiten',
 						render: (setting) => {
 							setting.addButton((button) => {
@@ -1381,10 +1381,12 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 			const medical = usesMedicalTemplate(this.plugin.settings.synki.profile, fields)
 			let addedFields: string[] = []
 			if (medical) {
+				await client.migrateQuestionAnswerField(modelName)
 				addedFields = await client.ensureModelFields(modelName, MEDICAL_TEMPLATE_FIELDS)
-				const missingConfigured = MEDICAL_TEMPLATE_FIELDS.filter((field) => !fields.includes(field))
-				if (missingConfigured.length > 0) {
-					this.plugin.settings.synki.fields = [...fields, ...missingConfigured].join('\n')
+				const migratedFields = fields.map((field) => field === 'Mündliche Präsentation' ? 'Q&A' : field)
+				const missingConfigured = MEDICAL_TEMPLATE_FIELDS.filter((field) => !migratedFields.includes(field))
+				if (missingConfigured.length > 0 || migratedFields.some((field, index) => field !== fields[index])) {
+					this.plugin.settings.synki.fields = [...new Set([...migratedFields, ...missingConfigured])].join('\n')
 					await this.plugin.saveSettings()
 				}
 			}

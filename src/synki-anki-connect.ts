@@ -21,6 +21,10 @@ export type SynkiTemplatePayload = {
 	templateName: string
 }
 
+// Dieses Feld wird ausschließlich in Anki gepflegt und darf bei Updates aus
+// Obsidian niemals durch einen leeren oder lokalen Quellwert ersetzt werden.
+export const ANKI_ONLY_FIELDS = new Set(['Ankinotiz'])
+
 type AnkiConnectResponse<T> = {
 	error: null | string
 	result: T
@@ -77,6 +81,17 @@ export class SynkiConnectClient {
 		return added
 	}
 
+	public async migrateQuestionAnswerField(modelName: string): Promise<void> {
+		const fields = await this.invoke<string[]>('modelFieldNames', { modelName })
+		if (fields.includes('Mündliche Präsentation') && !fields.includes('Q&A')) {
+			await this.invoke('modelFieldRename', {
+				modelName,
+				oldFieldName: 'Mündliche Präsentation',
+				newFieldName: 'Q&A',
+			})
+		}
+	}
+
 	public async noteExists(noteId: string): Promise<boolean> {
 		const notes = await this.invoke<Array<{ noteId: number }>>('notesInfo', {
 			notes: [Number(noteId)],
@@ -110,9 +125,12 @@ export class SynkiConnectClient {
 	}
 
 	public async updateNote(noteId: string, note: SynkiNotePayload): Promise<void> {
+		const syncedFields = Object.fromEntries(
+			Object.entries(note.fields).filter(([fieldName]) => !ANKI_ONLY_FIELDS.has(fieldName)),
+		)
 		await this.invoke('updateNoteFields', {
 			note: {
-				fields: note.fields,
+				fields: syncedFields,
 				id: Number(noteId),
 			},
 		})

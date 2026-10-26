@@ -33,7 +33,7 @@ type FieldSpan = {
 
 const ANKI_HEADER_RE = /^## Anki\s*$/imu
 const BLOCK_RE = /^START\s*\n([\s\S]*?)^END\s*$(?:\n?<!--ANKI-NOTE-ID:\s*([0-9]+)\s*-->)?/gimu
-const FIELD_RE = /^([A-Za-zÄÖÜäöüß0-9][A-Za-zÄÖÜäöüß0-9 /_-]{0,80}):[ \t]*(.*)$/gmu
+const FIELD_RE = /^([A-Za-zÄÖÜäöüß0-9][A-Za-zÄÖÜäöüß0-9 &/_-]{0,80}):[ \t]*(.*)$/gmu
 const FILE_TAGS_RE = /^FILE TAGS:\s*(.*?)\s*$/imu
 const TARGET_DECK_RE = /^TARGET DECK:\s*(.+?)\s*$/imu
 
@@ -50,7 +50,7 @@ export const CLOZE_OBSIDIAN_FIELDS = [
 	'Merksprüche',
 	'Eigene Prüfungsfragen',
 	'Symptombild',
-	'Mündliche Präsentation',
+	'Q&A',
 	'Klinischer Algorithmus',
 	'Oberarzt-Modus',
 	'One by one',
@@ -62,8 +62,9 @@ export const DEFAULT_SYNKI_PARSER_OPTIONS: SynkiParserOptions = {
 		'back extra': 'Back Extra',
 		'clinical algorithm': 'Klinischer Algorithmus',
 		'klinischer algorithmus': 'Klinischer Algorithmus',
-		'oral presentation': 'Mündliche Präsentation',
-		'mündliche präsentation': 'Mündliche Präsentation',
+		'oral presentation': 'Q&A',
+		'mündliche präsentation': 'Q&A',
+		'q&a': 'Q&A',
 		'oberarzt-modus': 'Oberarzt-Modus',
 		'oberarzt modus': 'Oberarzt-Modus',
 		'oberarzt mode': 'Oberarzt-Modus',
@@ -114,8 +115,9 @@ export const FIELD_ALIASES: Record<string, string> = {
 	'back extra': 'Back Extra',
 	'clinical algorithm': 'Klinischer Algorithmus',
 	'klinischer algorithmus': 'Klinischer Algorithmus',
-	'oral presentation': 'Mündliche Präsentation',
-	'mündliche präsentation': 'Mündliche Präsentation',
+	'oral presentation': 'Q&A',
+	'mündliche präsentation': 'Q&A',
+	'q&a': 'Q&A',
 	'oberarzt-modus': 'Oberarzt-Modus',
 	'oberarzt modus': 'Oberarzt-Modus',
 	'oberarzt mode': 'Oberarzt-Modus',

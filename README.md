@@ -35,7 +35,7 @@ The important differences:
 - **Decks come from `TARGET DECK` and optional `SUBDECK`.** Each card can go to a different nested deck within the parent; the block-sync command does not derive decks from the Obsidian folder path.
 - **Tags are merged.** `FILE TAGS` are combined with each card's own `Tags` field.
 - **Stable updates.** New cards get `<!--ANKI-NOTE-ID: ...-->` after `END`, so later syncs update the same Anki note instead of creating duplicates.
-- **Profiles plus custom note types.** `Medical clinical` is the default profile and includes `Thema`, `Hint`, `Mündliche Präsentation`, `Klinischer Algorithmus`, `Oberarzt-Modus`, and `Symptombild`; `International Affairs Master` restores the previous general field set; `Custom` exposes the note type, fields, aliases, and source folders for any own setup.
+- **Profiles plus custom note types.** `Medical clinical` is the default profile and includes `Thema`, `Hint`, `Q&A`, `Klinischer Algorithmus`, `Oberarzt-Modus`, and `Symptombild`; `International Affairs Master` restores the previous general field set; `Custom` exposes the note type, fields, aliases, and source folders for any own setup.
 - **Two block-sync commands.** Sync only the current note, or sync every note in the configured block-sync folders.
 - **Basic inline Markdown.** `**bold text**` in block fields is sent to Anki as bold HTML.
 - **Review controls for richer cards.** One-by-one cards can reveal clozes with <kbd>N</kbd>, reveal all clozes with <kbd>,</kbd>, and cycle extra field panels with <kbd>X</kbd>. <kbd>Space</kbd> stays reserved for Anki's normal review flow.
@@ -47,6 +47,19 @@ The original Yanki folder-sync command is still present for reference. The fork-
 Synki: Sync this note
 Synki: Sync all block folders to Anki
 ```
+
+## Filtered-deck generator on another computer
+
+The generator is included in the Synki plugin. Install the current [main build](https://github.com/gengsta1/synki/releases/tag/main) on each computer where you want to use it:
+
+1. Download `main.js`, `manifest.json`, and `styles.css` from the release assets.
+2. Put all three files in `<your vault>/.obsidian/plugins/synki/` on that computer, then enable **Synki** under Obsidian's community plugins. Restart Obsidian or reload the plugin after replacing an older build.
+3. Make the same master notes available in that computer's Obsidian vault. Open **Synki: Filtered deck generator** from the command palette, use the filter ribbon icon, or choose **Generator öffnen** in Synki settings.
+4. Select the notes and copy the generated `deck:"…"` query into Anki's filtered-deck search. The displayed card count comes from the selected Obsidian notes; Anki may collect fewer cards if they have not been synced yet or are unavailable to filtered decks.
+
+The generator reads `TARGET DECK` and card blocks from the local vault, and it does **not** sync cards or need AnkiConnect just to create a query. To use the query in Anki, the matching decks/cards must exist in that device's Anki collection, for example through AnkiWeb sync. The query remains deck-based and does not contain local note IDs.
+
+Synki is currently a **desktop-only Obsidian plugin** (`isDesktopOnly: true`). This release makes the generator available on other macOS, Windows, and Linux computers, but does not make it run in Obsidian Mobile or as a GitHub web page. The moving `main` release is a prerelease build; check its date before installing and keep a backup of an older working plugin version.
 
 ## Live Anki block format
 

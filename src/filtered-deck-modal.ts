@@ -4,8 +4,9 @@ import { buildFilteredDeckQuery, type FilteredDeckOptions, type FilteredDeckStat
 import { parseSynkiDocument } from './synki-parser'
 
 type SelectableNote = {
+	cardCount: number
+	deckNames: string[]
 	file: TFile
-	ids: string[]
 }
 
 const STATE_CHOICES: Array<[FilteredDeckState, string]> = [
@@ -40,14 +41,14 @@ export class FilteredDeckModal extends Modal {
 		this.contentEl.addClass('synki-filter-modal')
 		this.contentEl.createEl('h2', { text: 'Filtered Deck aus Hauptnotizen' })
 		this.contentEl.createEl('p', {
-			text: 'Mehrere Notizen auswählen. Die Suchabfrage verwendet ihre Anki-Notiz-IDs, damit Karten anderer Themen im selben Deck nicht mitkommen.',
+			text: 'Mehrere Notizen auswählen. Die Suchabfrage wird aus TARGET DECK der Obsidian-Notizen erstellt und bleibt in Anki dynamisch.',
 		})
-		const files = this.app.vault.getMarkdownFiles().filter((file) =>
-			file.path.startsWith('6 - Main Notes/'),
-		)
+		const files = this.app.vault.getMarkdownFiles().filter((file) => isMainNote(file.path))
 		const notes = await Promise.all(files.map(async (file) => {
 			const parsed = parseSynkiDocument(await this.app.vault.read(file))
-			return { file, ids: parsed.cards.flatMap((card) => card.noteId ? [card.noteId] : []) }
+			const deckNames = parsed.targetDeck === null ? [] : [parsed.targetDeck]
+			const cardCount = parsed.cards.reduce((total, card) => total + expectedAnkiCardCount(card.fields.Text ?? ''), 0)
+			return { cardCount, deckNames, file }
 		}))
 		this.notes = notes.sort((a, b) => a.file.basename.localeCompare(b.file.basename, 'de'))
 		this.render()
@@ -60,7 +61,7 @@ export class FilteredDeckModal extends Modal {
 		const actions = this.contentEl.createDiv({ cls: 'synki-filter-actions' })
 		const selectVisible = actions.createEl('button', { text: 'Sichtbare auswählen' })
 		selectVisible.addEventListener('click', () => {
-			for (const note of this.visibleNotes()) if (note.ids.length > 0) this.selected.add(note.file.path)
+			for (const note of this.visibleNotes()) if (note.deckNames.length > 0 && note.cardCount > 0) this.selected.add(note.file.path)
 			this.renderList(); this.refreshQuery()
 		})
 		const reset = actions.createEl('button', { text: 'Zurücksetzen' })
@@ -104,7 +105,7 @@ export class FilteredDeckModal extends Modal {
 		copy.addClass('mod-cta')
 		copy.addEventListener('click', () => { void this.copyQuery() })
 		this.contentEl.createEl('p', {
-			text: 'In Anki: Werkzeuge → Gefilterten Stapel erstellen; Abfrage einfügen und Limit/Reihenfolge wählen. Gesperrte, vergrabene oder bereits gefilterte Karten können nicht eingesammelt werden. Notizen ohne Anki-ID zuerst synchronisieren.',
+			text: 'In Anki: Werkzeuge → Gefilterten Stapel erstellen; Abfrage einfügen und Limit/Reihenfolge wählen. Gesperrte, vergrabene oder bereits gefilterte Karten können nicht eingesammelt werden. Der Generator löst keinen Sync aus.',
 			cls: 'synki-filter-help',
 		})
 		this.refreshQuery()
@@ -120,24 +121,25 @@ export class FilteredDeckModal extends Modal {
 			const row = this.list.createEl('label', { cls: 'synki-filter-row' })
 			const check = row.createEl('input', { type: 'checkbox' })
 			check.checked = this.selected.has(note.file.path)
-			check.disabled = note.ids.length === 0
+			check.disabled = note.deckNames.length === 0 || note.cardCount === 0
 			check.addEventListener('change', () => {
 				if (check.checked) this.selected.add(note.file.path)
 				else this.selected.delete(note.file.path)
 				this.refreshQuery()
 			})
-			row.createSpan({ text: note.ids.length > 0
-				? `${note.file.basename} (${note.ids.length})`
-				: `${note.file.basename} (noch keine synchronisierten Karten)` })
+			row.createSpan({ text: note.deckNames.length > 0 && note.cardCount > 0
+				? `${note.file.basename} (${note.cardCount} Karten)`
+				: `${note.file.basename} (kein vollständiger Anki-Abschnitt)` })
 		}
 		if (this.visibleNotes().length === 0) this.list.createEl('p', { text: 'Keine passende Hauptnotiz gefunden.' })
 	}
 
 	private refreshQuery(): void {
 		const selected = this.notes.filter((note) => this.selected.has(note.file.path))
-		const ids = selected.flatMap((note) => note.ids)
-		this.output.value = buildFilteredDeckQuery(ids, this.options)
-		this.summary.textContent = `${selected.length} Notizen · ${new Set(ids).size} Anki-Notizen ausgewählt`
+		const deckNames = selected.flatMap((note) => note.deckNames)
+		const cardCount = selected.reduce((total, note) => total + note.cardCount, 0)
+		this.output.value = buildFilteredDeckQuery(deckNames, this.options)
+		this.summary.textContent = `${selected.length} Notizen · ${cardCount} Karten · ${new Set(deckNames).size} Decks`
 	}
 
 	private async copyQuery(): Promise<void> {
@@ -150,4 +152,13 @@ export class FilteredDeckModal extends Modal {
 			new Notice('Automatisches Kopieren nicht möglich. Die Abfrage ist markiert und kann manuell kopiert werden.')
 		}
 	}
+}
+
+function expectedAnkiCardCount(text: string): number {
+	const clozeNumbers = new Set([...text.matchAll(/\{\{c(\d+)::/giu)].map((match) => match[1]))
+	return Math.max(1, clozeNumbers.size)
+}
+
+function isMainNote(path: string): boolean {
+	return path.startsWith('6 - Main Notes/') || path.includes('/6 - Main Notes/')
 }

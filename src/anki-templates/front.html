@@ -1,115 +1,318 @@
+
 <div id="obsidian-card" class="card-shell" style="visibility:hidden;">
   <div class="card-context">
     {{#Thema}}<span class="context-chip topic-label" id="topic-label">{{Thema}}</span>{{/Thema}}
     <span class="context-chip priority-chip" id="priority-chip" hidden></span>
     <span class="context-chip exam-chip" id="exam-chip" hidden></span>
+
+<!-- Mini-Pomodoro: nur in AnkiMobile sichtbar -->
+<div id="am-pomo" class="am-pomo" hidden>
+  <button type="button" id="am-pomo-chip" class="am-pomo-chip" aria-expanded="false" aria-controls="am-pomo-panel">🍅 <span id="am-pomo-clock">25:00</span></button>
+  <div id="am-pomo-panel" class="am-pomo-panel" hidden>
+    <div class="am-pomo-head"><strong id="am-pomo-phase">Fokus</strong><span id="am-pomo-round">Runde 1/4</span></div>
+    <div class="am-pomo-track"><div id="am-pomo-fill" class="am-pomo-fill"></div></div>
+    <div class="am-pomo-buttons">
+      <button type="button" data-pomo="toggle" id="am-pomo-toggle">Start</button>
+      <button type="button" data-pomo="stop">Stopp</button>
+      <button type="button" data-pomo="restart">Neustart</button>
+      <button type="button" data-pomo="skip">Weiter</button>
+    </div>
+    <button type="button" data-pomo="settings" class="am-pomo-settings-toggle" id="am-pomo-settings-button">⚙ Einstellungen</button>
+    <div id="am-pomo-settings" class="am-pomo-settings" hidden>
+      <div class="am-pomo-settings-grid">
+        <label>Fokus (Min.)<input type="number" inputmode="numeric" id="am-focus" min="1" max="180" step="1"></label>
+        <label>Kurzpause (Min.)<input type="number" inputmode="numeric" id="am-short" min="1" max="90" step="1"></label>
+        <label>Langpause (Min.)<input type="number" inputmode="numeric" id="am-long" min="1" max="180" step="1"></label>
+        <label>Runden bis Langpause<input type="number" inputmode="numeric" id="am-rounds" min="1" max="20" step="1"></label>
+      </div>
+      <label class="am-pomo-check"><input type="checkbox" id="am-auto"> Phasen automatisch fortsetzen</label>
+      <label class="am-pomo-check"><input type="checkbox" id="am-sound"> Signalton bei Phasenwechsel</label>
+      <button type="button" data-pomo="save" class="am-pomo-save">Einstellungen speichern</button>
+      <div class="am-pomo-note">Neue Einstellungen starten eine neue, angehaltene Fokus-Serie.</div>
+    </div>
+    <div id="am-pomo-info" class="am-pomo-info" aria-live="polite"></div>
+  </div>
+</div>
   </div>
   {{#Oberarzt-Modus}}<div id="exam-meta" hidden>{{Oberarzt-Modus}}</div>{{/Oberarzt-Modus}}
   {{#Eigene Prüfungsfragen}}<div id="legacy-exam-meta" hidden>{{Eigene Prüfungsfragen}}</div>{{/Eigene Prüfungsfragen}}
+  {{#Klinischer Algorithmus}}<div id="algorithm-meta" hidden>{{Klinischer Algorithmus}}</div>{{/Klinischer Algorithmus}}
+  {{#Q&A}}<div id="qa-meta" hidden>{{Q&A}}</div>{{/Q&A}}
   <div id="priority-meta" hidden>{{Tags}}</div>
   <div id="text" class="main-text">{{cloze:Text}}</div>
 </div>
 
 <script>
 (function () {
+  "use strict";
   function renderRichMarkdown(root) {
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-
-    nodes.forEach(function (node) {
-      const value = node.nodeValue || "";
-      if (!/[*_\[]/.test(value)) return;
-      const fragment = document.createDocumentFragment();
-      value.split(/(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g).forEach(function (part) {
-        if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
-          const strong = document.createElement("strong");
-          strong.textContent = part.slice(2, -2);
-          fragment.appendChild(strong);
-        } else if (part.startsWith("__") && part.endsWith("__") && part.length > 4) {
-          const underline = document.createElement("u");
-          underline.textContent = part.slice(2, -2);
-          fragment.appendChild(underline);
-        } else if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
-          const emphasis = document.createElement("em");
-          emphasis.textContent = part.slice(1, -1);
-          fragment.appendChild(emphasis);
-        } else if (/^\[[^\]]+\]\(https?:\/\/[^\s)]+\)$/.test(part)) {
-          const link = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/.exec(part);
-          const anchor = document.createElement("a");
-          anchor.textContent = link[1];
-          anchor.href = link[2];
-          fragment.appendChild(anchor);
-        } else if (part) {
-          fragment.appendChild(document.createTextNode(part));
-        }
+    var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function(node){
+      var v=node.nodeValue || "";
+      if (!/[*_\[]/.test(v)) return;
+      var frag=document.createDocumentFragment();
+      v.split(/(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g).forEach(function(p){
+        var x=null,m;
+        if(/^\*\*[^*]+\*\*$/.test(p)) {x=document.createElement("strong");x.textContent=p.slice(2,-2);}
+        else if(/^__[^_]+__$/.test(p)) {x=document.createElement("u");x.textContent=p.slice(2,-2);}
+        else if(/^\*[^*]+\*$/.test(p)) {x=document.createElement("em");x.textContent=p.slice(1,-1);}
+        else if((m=/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/.exec(p))) {x=document.createElement("a");x.textContent=m[1];x.href=m[2];}
+        frag.appendChild(x || document.createTextNode(p));
       });
-      node.parentNode.replaceChild(fragment, node);
+      if(node.parentNode) node.parentNode.replaceChild(frag,node);
     });
   }
-
-  const card = document.getElementById("obsidian-card");
-  const text = document.getElementById("text");
-  const setting = `{{text:One by one}}`.trim().toLowerCase();
-  const enabledValues = ["true", "on", "1", "ja"];
-
-  if (text) renderRichMarkdown(text);
-
-  function sourceLines(id) {
-    const source = document.getElementById(id);
-    if (!source) return [];
-    const html = source.innerHTML.replace(/<br\s*\/?\s*>/gi, "\n").replace(/<\/(?:p|li|div)>/gi, "\n");
-    const temp = document.createElement("div"); temp.innerHTML = html;
-    return (temp.textContent || "").split(/\n/).map(s => s.trim()).filter(Boolean);
+  var card=document.getElementById("obsidian-card"),text=document.getElementById("text");
+  if(!card||!text) return;
+  var ios= document.documentElement.classList.contains("iphone") ||
+    document.documentElement.classList.contains("ipad") ||
+    (/(iPhone|iPad|iPod)/i.test(navigator.userAgent) && !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.cb));
+  if(ios) {try{sessionStorage.setItem("ankiMiniTimerStart",String(Date.now()));}catch(e){}}
+  renderRichMarkdown(text);
+  function sourceLines(id){
+    var s=document.getElementById(id);if(!s)return [];
+    var html=s.innerHTML.replace(/<br\s*\/?\s*>/gi,"\n").replace(/<\/(?:p|li|div)>/gi,"\n");
+    var temp=document.createElement("div");temp.innerHTML=html;
+    return (temp.textContent||"").split(/\n/).map(function(x){return x.trim();}).filter(Boolean);
   }
-  const examLines = sourceLines("exam-meta");
-  const examCount = examLines.filter(s => s.split(/\s*\|\s*/).length >= 3).length ||
-    (sourceLines("legacy-exam-meta").join(" ").match(/Antwort:/gi) || []).length;
-  if (examCount) {
-    const examChip = document.getElementById("exam-chip");
-    examChip.textContent = examCount + (examCount === 1 ? " Frage" : " Fragen");
-    examChip.classList.add("available");
-    examChip.hidden = false;
+  var exam=sourceLines("exam-meta");
+  var count=exam.filter(function(x){return x.split(/\s*\|\s*/).length>=3;}).length ||
+    (sourceLines("legacy-exam-meta").join(" ").match(/Antwort:/gi)||[]).length;
+  var steps=sourceLines("algorithm-meta").filter(function(x){return x.split(/\s*\|\s*/).length>=3;}).length;
+  var qa=sourceLines("qa-meta").filter(function(x){return x.split(/\s*\|\s*/).length>=3;}).length;
+  if(count||steps||qa){var chip=document.getElementById("exam-chip");if(chip){var info=[];if(count)info.push("🎤 "+count);if(steps)info.push("🩺 "+steps);if(qa)info.push("📖 "+qa);chip.textContent=info.join(" · ");chip.title="Verfügbare Inhalte für die Lernmodi auf dieser Karte.";chip.classList.add("available");chip.hidden=false;}}
+  var topic=document.getElementById("topic-label"),priority=(document.getElementById("priority-meta")?.textContent||"").toLowerCase(),
+      badge=document.getElementById("priority-chip");
+  if(badge && /(?:^|\s)high_yield(?:\s|$)/.test(priority)){badge.textContent="◆";badge.title="High Yield";badge.setAttribute("aria-label","High Yield");badge.classList.add("high-yield");badge.hidden=false;}
+  else if(badge && /(?:^|\s)low_yield(?:\s|$)/.test(priority)){badge.textContent="◇";badge.title="Low Yield";badge.setAttribute("aria-label","Low Yield");badge.classList.add("low-yield");badge.hidden=false;}
+  if(topic && topic.textContent.includes(" › ")){
+    var parts=topic.textContent.split(" › ");topic.textContent=parts.shift();
+    var area=document.createElement("span");area.className="context-chip area-chip";area.textContent=parts.join(" › ");topic.insertAdjacentElement("afterend",area);
   }
-  const topicLabel = document.getElementById("topic-label");
-  const priorityText = (document.getElementById("priority-meta")?.textContent || "").toLowerCase();
-  const priorityChip = document.getElementById("priority-chip");
-  if (priorityChip && /(?:^|\s)high_yield(?:\s|$)/.test(priorityText)) {
-    priorityChip.textContent = "High yield";
-    priorityChip.classList.add("high-yield");
-    priorityChip.hidden = false;
-  } else if (priorityChip && /(?:^|\s)low_yield(?:\s|$)/.test(priorityText)) {
-    priorityChip.textContent = "Low yield";
-    priorityChip.classList.add("low-yield");
-    priorityChip.hidden = false;
-  }
-  if (topicLabel && topicLabel.textContent.includes(" › ")) {
-    const [main, ...parts] = topicLabel.textContent.split(" › ");
-    topicLabel.textContent = main;
-    const area = document.createElement("span");
-    area.className = "context-chip area-chip";
-    area.textContent = parts.join(" › ");
-    topicLabel.insertAdjacentElement("afterend", area);
-  }
-
-  const shouldUseOneByOne = Boolean(text) && enabledValues.includes(setting) &&
-    text.querySelectorAll(".cloze").length >= 2;
-
-  if (!shouldUseOneByOne) {
-    if (card) card.style.visibility = "visible";
-    return;
-  }
-
-  // Anki zeigt die Rückseite sofort. Dort werden die bereits gelösten Clozes
-  // wieder einzeln verdeckt und mit N freigegeben.
-  setTimeout(function () {
-    if (window.pycmd) {
-      window.pycmd("ans");
-    } else if (window.showAnswer) {
-      window.showAnswer();
-    } else if (card) {
-      card.style.visibility = "visible";
+  var setting=`{{text:One by one}}`.trim().toLowerCase();
+  var oneByOne=["true","on","1","ja","yes"].includes(setting) && text.querySelectorAll(".cloze").length>=2;
+  if(!oneByOne){card.style.visibility="visible";return;}
+  function hasIOSBridge(){return !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.cb && typeof window.webkit.messageHandlers.cb.postMessage === "function");}
+  function flip(){
+    if(typeof window.pycmd === "function"){window.pycmd("ans");return true;}
+    if(typeof window.showAnswer === "function"){window.showAnswer();return true;}
+    if(hasIOSBridge()){
+      window.webkit.messageHandlers.cb.postMessage(JSON.stringify({scheme:"ankitap",msg:"midCenter"}));
+      return true;
     }
-  }, 30);
+    return false;
+  }
+  function fallback(){if(card.isConnected)card.style.visibility="visible";}
+  if(!(typeof window.pycmd === "function" || typeof window.showAnswer === "function" || hasIOSBridge())){fallback();return;}
+  setTimeout(function(){
+    try{if(!flip())fallback();else setTimeout(fallback,1000);}catch(e){console.warn("Autoflip",e);fallback();}
+  },hasIOSBridge()?200:30);
+})();
+</script>
+
+<script>
+/* Eigenständiger AnkiMobile-Pomodoro; keine Desktop-Add-ons berührt. */
+(function () {
+  "use strict";
+  var doc = document.documentElement;
+  var isAnkiMobile = doc.classList.contains("iphone") || doc.classList.contains("ipad") ||
+    document.body.classList.contains("iphone") || document.body.classList.contains("ipad") ||
+    (/(iPhone|iPad|iPod)/i.test(navigator.userAgent) &&
+      !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.cb));
+  if (!isAnkiMobile) return;
+
+  if (typeof window.__amPomodoroCleanup === "function") window.__amPomodoroCleanup();
+  var root = document.getElementById("am-pomo");
+  if (!root) return;
+  root.hidden = false;
+  document.documentElement.classList.add("am-pomodoro-enabled");
+
+  function get(id) { return root.querySelector("#" + id); }
+  var chip = get("am-pomo-chip"), panel = get("am-pomo-panel"), clock = get("am-pomo-clock");
+  var phase = get("am-pomo-phase"), rounds = get("am-pomo-round"), fill = get("am-pomo-fill");
+  var toggle = get("am-pomo-toggle"), settings = get("am-pomo-settings"), info = get("am-pomo-info");
+  var KEY = "obsidian_ankimobile_pomodoro_v3";
+  var storage = null;
+  ["localStorage", "sessionStorage"].some(function (kind) {
+    try {
+      var s = window[kind];
+      s.setItem("__am_pomo_probe", "yes");
+      if (s.getItem("__am_pomo_probe") === "yes") {
+        s.removeItem("__am_pomo_probe"); storage = s; return true;
+      }
+    } catch (e) {}
+    return false;
+  });
+  var defaults = {focus:25, short:5, long:15, rounds:4, auto:false, sound:false};
+  function finiteInt(n, fallback, lo, hi) {
+    n = Number(n); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, Math.round(n))) : fallback;
+  }
+  function validated(c) {
+    c = c || {};
+    return {focus:finiteInt(c.focus,25,1,180), short:finiteInt(c.short,5,1,90),
+      long:finiteInt(c.long,15,1,180), rounds:finiteInt(c.rounds,4,1,20),
+      auto:c.auto === true, sound:c.sound === true};
+  }
+  function duration(s, cfg) {
+    return 60000 * (s === "short" ? cfg.short : s === "long" ? cfg.long : cfg.focus);
+  }
+  function fresh(cfg) {
+    return {config:validated(cfg), phase:"focus", completed:0, running:false,
+      endAt:0, remaining:duration("focus", validated(cfg))};
+  }
+  function load() {
+    try {
+      var raw = storage && storage.getItem(KEY);
+      if (raw) {
+        var v = JSON.parse(raw), c = validated(v.config);
+        if (["focus", "short", "long"].includes(v.phase)) {
+          return {config:c, phase:v.phase, completed:finiteInt(v.completed,0,0,1000000),
+            running:v.running === true && Number.isFinite(Number(v.endAt)),
+            endAt:Number(v.endAt) || 0,
+            remaining:Math.max(0, Number(v.remaining) || duration(v.phase,c))};
+        }
+      }
+    } catch (e) {}
+    return fresh(defaults);
+  }
+  var state = load();
+  function save() { try { if (storage) storage.setItem(KEY, JSON.stringify(state)); } catch(e) {} }
+  function left() { return state.running ? Math.max(0, state.endAt - Date.now()) : state.remaining; }
+
+  // Ton nur nach echter Nutzerinteraktion freigeschaltet. iOS kann ihn bei
+  // inaktiver App / Stummschaltung / Kartenwechsel trotzdem unterdrücken.
+  var audioCtx = null;
+  function unlockAudio() {
+    if (!state.config.sound) return;
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtx || audioCtx.state === "closed") audioCtx = new Ctx();
+      if (audioCtx.state === "suspended") audioCtx.resume().catch(function(){});
+    } catch (e) {}
+  }
+  function chime() {
+    if (!state.config.sound || document.hidden) return;
+    try {
+      if (!audioCtx || audioCtx.state !== "running") return;
+      var t = audioCtx.currentTime;
+      [660,880].forEach(function (hz, i) {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = "sine"; o.frequency.value = hz;
+        o.connect(g); g.connect(audioCtx.destination);
+        var at = t + i*0.19;
+        g.gain.setValueAtTime(0.0001, at);
+        g.gain.exponentialRampToValueAtTime(0.12, at+0.018);
+        g.gain.exponentialRampToValueAtTime(0.0001, at+0.17);
+        o.start(at); o.stop(at+0.18);
+      });
+    } catch(e) {}
+  }
+  function step(startOfNext) {
+    if (state.phase === "focus") {
+      state.completed += 1;
+      state.phase = state.completed % state.config.rounds === 0 ? "long" : "short";
+    } else state.phase = "focus";
+    state.remaining = duration(state.phase, state.config);
+    if (state.config.auto) {
+      state.running = true;
+      state.endAt = startOfNext + state.remaining;
+    } else {
+      state.running = false;
+      state.endAt = 0;
+    }
+  }
+  function advanceIfDue() {
+    if (!state.running || Date.now() < state.endAt) return;
+    var now = Date.now(), endedRecently = now - state.endAt < 3500, n = 0;
+    while (state.running && now >= state.endAt && n++ < 10000) {
+      step(state.endAt);
+    }
+    if (n >= 10000) { state = fresh(state.config); }
+    save();
+    // Nur ein Ton beim aktuellen Phasenwechsel, nicht für vergangene Stunden.
+    if (endedRecently) chime();
+    if (!state.running) info.textContent = "Phase abgeschlossen · nächste Phase bereit";
+  }
+  function fmt(ms) {
+    var seconds = Math.ceil(Math.max(0,ms)/1000);
+    return String(Math.floor(seconds/60)).padStart(2,"0") + ":" +
+      String(seconds%60).padStart(2,"0");
+  }
+  function render() {
+    if (!root.isConnected) { cleanup(); return; }
+    advanceIfDue();
+    var ms = left(), conf = state.config, base = duration(state.phase,conf);
+    clock.textContent = fmt(ms);
+    chip.firstChild.textContent = state.phase === "focus" ? "🍅 " : "☕ ";
+    phase.textContent = state.phase === "focus" ? "Fokus" : state.phase === "short" ? "Kurzpause" : "Langpause";
+    rounds.textContent = "Runde " + (state.completed % conf.rounds + 1) + "/" + conf.rounds;
+    toggle.textContent = state.running ? "Pause" : (ms < base ? "Fortsetzen" : "Start");
+    fill.style.width = Math.max(0, Math.min(100, (1 - ms/base)*100)) + "%";
+    fill.style.backgroundColor = state.phase === "focus" ? "#50c8c9" : "#efad67";
+    chip.classList.toggle("am-pomo-running", state.running);
+  }
+  function updateFields() {
+    ["focus","short","long","rounds"].forEach(function(k){get("am-"+k).value = state.config[k];});
+    get("am-auto").checked=state.config.auto;
+    get("am-sound").checked=state.config.sound;
+  }
+  function onClick(e) {
+    var b = e.target.closest("button");
+    if (!b || !root.contains(b)) return;
+    e.preventDefault(); e.stopPropagation();
+    if (b === chip) {
+      panel.hidden = !panel.hidden;
+      chip.setAttribute("aria-expanded", String(!panel.hidden));
+      if (!panel.hidden) updateFields();
+      return;
+    }
+    var action=b.getAttribute("data-pomo");
+    if (!action) return;
+    if (action === "toggle") {
+      advanceIfDue();
+      if (state.running) {state.remaining=left();state.running=false;state.endAt=0; info.textContent="Pausiert";}
+      else {state.running=true;state.endAt=Date.now()+state.remaining;info.textContent="";unlockAudio();}
+    } else if (action === "stop") {
+      state=fresh(state.config);info.textContent="Gestoppt · bereit für eine neue Serie";
+    } else if (action === "restart") {
+      state=fresh(state.config);state.running=true;state.endAt=Date.now()+state.remaining;
+      info.textContent="Neue Fokus-Serie gestartet";unlockAudio();
+    } else if (action === "skip") {
+      step(Date.now());info.textContent="Nächste Phase";
+      if (state.config.auto) unlockAudio();
+    } else if (action === "settings") {
+      settings.hidden=!settings.hidden;
+      if (!settings.hidden) updateFields();
+      return;
+    } else if (action === "save") {
+      var cfg={};
+      ["focus","short","long","rounds"].forEach(function(k){cfg[k]=Number(get("am-"+k).value);});
+      cfg.auto=get("am-auto").checked;cfg.sound=get("am-sound").checked;
+      state=fresh(validated(cfg));settings.hidden=true;
+      info.textContent="Gespeichert · neue Serie bereit";
+      unlockAudio();
+    }
+    save();render();
+  }
+  function swallow(e) {e.stopPropagation();}
+  root.addEventListener("click", onClick);
+  root.addEventListener("touchend", swallow);
+  root.addEventListener("keydown", swallow);
+  var interval = setInterval(render, 1000);
+  function visible() {if (!document.hidden) render();}
+  document.addEventListener("visibilitychange", visible);
+  function cleanup() {
+    clearInterval(interval);
+    root.removeEventListener("click", onClick);
+    root.removeEventListener("touchend", swallow);
+    root.removeEventListener("keydown", swallow);
+    document.removeEventListener("visibilitychange", visible);
+    // Timerstatus bleibt gespeichert; AudioContext von alter WebView freigeben.
+    if (audioCtx && audioCtx.state !== "closed") audioCtx.close().catch(function(){});
+  }
+  window.__amPomodoroCleanup=cleanup;
+  render();
 })();
 </script>

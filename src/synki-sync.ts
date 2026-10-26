@@ -1,6 +1,6 @@
 import { Notice, TFile } from 'obsidian'
 import type SynkiPlugin from './main'
-import { SynkiConnectClient, type SynkiNotePayload } from './synki-anki-connect'
+import { ANKI_ONLY_FIELDS, SynkiConnectClient, type SynkiNotePayload } from './synki-anki-connect'
 import {
 	CLOZE_OBSIDIAN_FIELDS,
 	DEFAULT_SYNKI_PARSER_OPTIONS,
@@ -95,6 +95,7 @@ export async function syncSynkiFile(
 
 	const client = new SynkiConnectClient(plugin.settings.ankiConnect)
 	const synced: { card: ParsedSynkiCardBlock; noteId: string }[] = []
+	const migratedModels = new Set<string>()
 	let skipped = 0
 
 	for (const card of parsed.cards) {
@@ -103,6 +104,10 @@ export async function syncSynkiFile(
 
 		try {
 			const deckName = resolveCardDeckName(parsed.targetDeck, card.subdeck)
+			if (modelName === options.defaultModelName && !migratedModels.has(modelName)) {
+				await client.migrateQuestionAnswerField(modelName)
+				migratedModels.add(modelName)
+			}
 			if ((card.fields[options.textFieldName]?.trim() ?? '').length === 0) {
 				throw new Error(`Card block for '${modelName}' has no ${options.textFieldName} field.`)
 			}
@@ -111,10 +116,12 @@ export async function syncSynkiFile(
 			if (missing.length > 0) {
 				throw new Error(`Model '${modelName}' lacks field '${missing[0]}'.`)
 			}
+			await client.ensureModelFields(modelName, [...ANKI_ONLY_FIELDS])
+			const fields = await renderFieldsForAnki(plugin, file, client, card.fields)
 
 			const payload: SynkiNotePayload = {
 				deckName,
-				fields: await renderFieldsForAnki(plugin, file, client, card.fields),
+				fields: card.noteId === null ? { ...fields, Ankinotiz: '' } : fields,
 				modelName,
 				tags: [...new Set([...parsed.fileTags, ...card.tags])],
 			}
@@ -176,7 +183,9 @@ function getSynkiFolders(plugin: SynkiPlugin): string[] {
 }
 
 function getSynkiParserOptions(plugin: SynkiPlugin): SynkiParserOptions {
-	const fields = splitLines(plugin.settings.synki.fields)
+	const fields = splitLines(plugin.settings.synki.fields).map((field) =>
+		field === 'Mündliche Präsentation' ? 'Q&A' : field
+	)
 	return {
 		defaultModelName:
 			plugin.settings.synki.defaultModelName.trim() ||
@@ -184,6 +193,8 @@ function getSynkiParserOptions(plugin: SynkiPlugin): SynkiParserOptions {
 		fieldAliases: {
 			...DEFAULT_SYNKI_PARSER_OPTIONS.fieldAliases,
 			...parseAliasMap(plugin.settings.synki.fieldAliases),
+			'mündliche präsentation': 'Q&A',
+			'oral presentation': 'Q&A',
 		},
 		fields: fields.length > 0 ? fields : CLOZE_OBSIDIAN_FIELDS,
 		modelAliases: {
