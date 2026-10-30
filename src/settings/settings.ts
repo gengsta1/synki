@@ -991,11 +991,11 @@ export class SynkiPluginSettingTab extends PluginSettingTab {
 				heading: 'Filtered Deck Generator',
 				items: [
 					{
-						desc: 'Wähle mehrere Notizen aus „6 - Main Notes“ und erzeuge daraus eine dynamische Anki-Deck-Abfrage aus TARGET DECK. Filter für fällige, neue und weitere Karten sind im Dialog verfügbar.',
-						name: 'Gefilterten Stapel vorbereiten',
+							desc: 'Select master notes and create a dynamic Anki query from TARGET DECK. Choose a card status for each deck or apply one status to all selected decks.',
+							name: 'Prepare filtered deck',
 						render: (setting) => {
 							setting.addButton((button) => {
-								button.setButtonText('Generator öffnen')
+								button.setButtonText('Open generator')
 								button.onClick(this.plugin.openFilteredDeckGenerator)
 							})
 						},

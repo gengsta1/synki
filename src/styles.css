@@ -87,6 +87,18 @@ div.synki-settings {
 	padding: 0.25rem;
 }
 
+.synki-filter-modal .synki-filter-row label {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex: 1;
+	min-width: 0;
+}
+
+.synki-filter-modal .synki-filter-row .synki-filter-deck-state {
+	max-width: 11rem;
+}
+
 .synki-filter-modal .synki-filter-options {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -97,6 +109,16 @@ div.synki-settings {
 .synki-filter-modal .synki-filter-options label {
 	display: grid;
 	gap: 0.25rem;
+}
+
+.synki-filter-modal .synki-filter-options .synki-filter-apply-all {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.synki-filter-modal .synki-filter-options .synki-filter-apply-all input {
+	width: auto;
 }
 
 .synki-filter-modal .synki-filter-query {

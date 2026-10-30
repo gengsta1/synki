@@ -54,8 +54,8 @@ The generator is included in the Synki plugin. Install the current [main build](
 
 1. Download `main.js`, `manifest.json`, and `styles.css` from the release assets.
 2. Put all three files in `<your vault>/.obsidian/plugins/synki/` on that computer, then enable **Synki** under Obsidian's community plugins. Restart Obsidian or reload the plugin after replacing an older build.
-3. Make the same master notes available in that computer's Obsidian vault. Open **Synki: Filtered deck generator** from the command palette, use the filter ribbon icon, or choose **Generator öffnen** in Synki settings.
-4. Select the notes and copy the generated `deck:"…"` query into Anki's filtered-deck search. The displayed card count comes from the selected Obsidian notes; Anki may collect fewer cards if they have not been synced yet or are unavailable to filtered decks.
+3. Make the same master notes available in that computer's Obsidian vault. Open **Synki: Filtered deck generator** from the command palette, use the filter ribbon icon, or choose **Open generator** in Synki settings.
+4. Select the notes and choose a card status beside each deck (all, due, new, learning, review, overdue, or due in the future). Notes that share a TARGET DECK share its status. Check **Apply card status to all selected decks** to use one status for every selected deck instead. Copy the generated `deck:"…"` query into Anki's filtered-deck search. The displayed card count comes from the selected Obsidian notes; Anki may collect fewer cards if they have not been synced yet or are unavailable to filtered decks.
 
 The generator reads `TARGET DECK` and card blocks from the local vault, and it does **not** sync cards or need AnkiConnect just to create a query. To use the query in Anki, the matching decks/cards must exist in that device's Anki collection, for example through AnkiWeb sync. The query remains deck-based and does not contain local note IDs.
 
